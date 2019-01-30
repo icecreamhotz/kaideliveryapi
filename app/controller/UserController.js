@@ -1,75 +1,60 @@
-const User = require('../model/User')
+const User = require('../model/Users')
+const Sequelize = require('sequelize');
+const Op = Sequelize.Op;
 const bcrypt = require('bcryptjs')
-const jwt = require('jsonwebtoken')
 const async = require('async')
 const crypto = require('crypto')
 const nodemailer = require('nodemailer')
+const sharp = require('sharp'),
+    fs = require('fs'),
+    request = require('request')
+const {
+    promisify
+} = require('util')
+const path = require('path')
+const helperUser = require('../helper/user')
 
-const checkUsernameUnique = (usname, res) => {
-    User.count({
-            attributes: ['username'],
-            where: {
-                username: usname
-            }
-        })
-        .then(result => {
-            if (result != 0) {
-                return res.status(409).json({
-                    message: 'username exists.'
-                })
-            }
-        })
-        .catch(err => {
-            res.status(500).json({
-                error: err
-            })
-        })
+/******************* provider image  ********************/
+const pathName = path.dirname(require.main.filename) + '/public/images/users/'
+let avatarName = null
+
+const readdir = promisify(fs.exists)
+const unlinkdir = promisify(fs.unlink)
+const writefiledir = promisify(fs.writeFile)
+
+const writeImage = (path) => {
+    sharp(path).resize(150, 150).toBuffer(async (err, buffer) => {
+        await writefiledir(path, buffer)
+    })
 }
 
-const checkEmailUnique = (email, res) => {
-    User.count({
-            attributes: ['email'],
-            where: {
-                email: email
+const settingImage = async (logo, file) => {
+    if (logo != null) {
+        try {
+            const checkFile = await readdir(pathName + logo)
+            if (checkFile) {
+                if (file) {
+                    await unlinkdir(pathName + logo)
+                    await writeImage(file.path)
+                    avatarName = file.filename
+                }
             }
-        })
-        .then(result => {
-            if (result != 0) {
-                return res.status(409).json({
-                    message: 'email exists.'
-                })
-            }
-        })
-        .catch(err => {
-            res.status(500).json({
-                error: err
+        } catch (err) {
+            res.json({
+                message: err
             })
-        })
+        }
+    } else {
+        if (file) {
+            await writeImage(file.path)
+            avatarName = file.filename
+        }
+    }
 }
+/************************* **************************/
 
-const checkTelephoneUnique = (tel, res) => {
-    User.count({
-            attributes: ['telephone'],
-            where: {
-                telephone: tel
-            }
-        })
-        .then(result => {
-            if (result != 0) {
-                return res.status(409).json({
-                    message: 'telephone exists.'
-                })
-            }
-        })
-        .catch(err => {
-            res.status(500).json({
-                error: err
-            })
-        })
-}
-
-const insertUser = (req, res) => {
-    bcrypt.hash(req.body.password, 10, (err, hash) => {
+const insertUser = async (req, res) => {
+    await bcrypt.hash(req.body.password, 10, async (err, hash) => {
         if (err) {
             return res.status(500).json({
                 error: err
@@ -84,14 +69,12 @@ const insertUser = (req, res) => {
                 telephone: req.body.telephone,
                 address: req.body.address
             }
-            User.create(user)
+            await User.create(user)
                 .then(result => {
-                    res.status(201).json({
-                        message: 'User Created.'
-                    })
+                    const response = helperUser.loginJWT(user)
+                    res.status(200).json(response)
                 })
                 .catch(err => {
-                    console.log(err)
                     res.status(500).json({
                         error: err
                     })
@@ -100,17 +83,53 @@ const insertUser = (req, res) => {
     })
 }
 
+const spreadNameFromFacebook = (name) => {
+    return name.split(' ')
+}
+
+const downloadImageFromUrl = async (url, provider_id) => {
+    let options = {
+        url: url,
+        method: "get",
+        encoding: null
+    }
+
+    const imageName = provider_id
+
+    await request(options, (err, res, body) => {
+        if (err) {
+            imageName = 'noimg'
+        } else {
+            fs.writeFileSync(pathName + provider_id + '.jpg', body)
+        }
+    })
+    return imageName + '.jpg'
+}
+
 const users = {
-    userData: async (req, res) => {
-        if (req.session.userId != req.params.userId) return res.status(401).json({
-            message: 'cannot access data.'
-        })
+    userAllData: async (req, res) => {
+        await User.findAll()
+            .then((user) => {
+                res.status(200).json({
+                    message: 'Success',
+                    data: user
+                })
+            })
+            .catch((err) => {
+                res.status(409).json({
+                    message: err
+                })
+            })
+    },
+    userDataById: async (req, res) => {
         await User.findOne({
             where: {
-                id: req.session.userId
+                user_id: req.decoded.user_id
             }
         }).then(user => {
-            res.status(400).json(user)
+            res.status(200).json({
+                user: user
+            })
         }).catch(err => {
             res.status(500).json({
                 message: err
@@ -118,14 +137,39 @@ const users = {
         })
     },
     signUpUsers: async (req, res) => {
-        await checkUsernameUnique(req.body.username, res)
-        await checkEmailUnique(req.body.email, res)
-        await checkTelephoneUnique(req.body.telephone, res)
         await insertUser(req, res)
+    },
+    checkUsername: async (req, res) => {
+        await User.findOne({
+                attributes: ['username'],
+                where: {
+                    username: req.body.username
+                }
+            })
+            .then(result => result !== null)
+            .then(isUnique => {
+                res.status(200).json({
+                    username: isUnique
+                })
+            })
+    },
+    checkEmail: async (req, res) => {
+        await User.findOne({
+                attributes: ['email'],
+                where: {
+                    email: req.body.email
+                }
+            })
+            .then(result => result !== null)
+            .then(isUnique => {
+                res.status(200).json({
+                    email: isUnique
+                })
+            })
     },
     loginUsers: async (req, res) => {
         await User.findOne({
-                attributes: ['id', 'username', 'password'],
+                attributes: ['user_id', 'username', 'password', 'email'],
                 where: {
                     username: req.body.username
                 }
@@ -145,19 +189,7 @@ const users = {
                         return
                     }
                     if (result) {
-                        req.session.userId = user.id
-                        const userdata = {
-                            id: user.id,
-                            email: user.email
-                        }
-                        const token = jwt.sign(userdata, process.env.JWT_SECRET, {
-                            expiresIn: '1h'
-                        })
-                        const response = {
-                            message: 'Login Successful.',
-                            token: token,
-                            expiresIn: '3600000'
-                        }
+                        const response = helperUser.loginJWT(user)
                         res.status(200).json(response)
                         return
                     }
@@ -174,9 +206,9 @@ const users = {
     },
     refreshToken: async (req, res) => {
         await User.findOne({
-                attributes: ['id'],
+                attributes: ['user_id'],
                 where: {
-                    id: req.session.userId
+                    user_id: req.session.userId
                 }
             })
             .then(user => {
@@ -186,18 +218,8 @@ const users = {
                     })
                     return
                 }
-                const userdata = {
-                    id: user.id,
-                    email: user.email
-                }
-                const token = jwt.sign(userdata, process.env.JWT_SECRET, {
-                    expiresIn: '1h'
-                })
-                res.status(200).json({
-                    message: 'refresh token.',
-                    refreshtoken: token,
-                    expiresIn: '3600000'
-                })
+                const response = helperUser.loginJWT(user)
+                res.status(200).json(response)
             })
             .catch(err => {
                 res.status(500).json({
@@ -208,9 +230,9 @@ const users = {
     changePassword: (req, res) => {
         if (req.body.password == req.body.confirm_password) {
             User.findOne({
-                    attributes: ['id'],
+                    attributes: ['user_id'],
                     where: {
-                        id: req.session.userId
+                        user_id: req.decoded.user_id
                     }
                 })
                 .then((user) => {
@@ -225,14 +247,14 @@ const users = {
                                 password: hash
                             }, {
                                 where: {
-                                    id: user.id
+                                    user_id: user.user_id
                                 }
                             })
                             .then((result) => {
                                 res.status(200).json({
-                                message: 'reset password complete'
+                                    message: 'reset password complete'
+                                })
                             })
-                        })
                     })
                 })
         } else {
@@ -241,34 +263,62 @@ const users = {
             })
         }
     },
-    updateData: (req, res) => {
-        const user = {
-            name: req.body.name,
-            lastname: req.body.lastname,
-            email: req.body.email,
-            telephone: req.body.telephone,
-            address: req.body.address,
-        }
-        User.update(user, {
-                where: {
-                    id: req.session.userId
+    updateData: async (req, res) => {
+        User.findByPk(req.decoded.user_id)
+            .then(async (user) => {
+                if (!user) {
+                    if (req.file && req.file != null) {
+                        if (readdir(req.file.path)) {
+                            await unlinkdir(req.file.path)
+                        }
+                    }
+                    return res.status(200).json({
+                        message: 'Success',
+                        data: 'No data'
+                    })
                 }
-            })
-            .then((result) => {
-                res.status(200).json({
-                    message: 'Update success!!'
-                })
+
+                avatarName = user.avatar
+                if (req.file && req.file != null) {
+                    await settingImage(avatarName, req.file)
+                }
+
+                const userdata = {
+                    name: req.body.name,
+                    lastname: req.body.lastname,
+                    email: req.body.email,
+                    telephone: req.body.telephone,
+                    address: req.body.address,
+                    avatar: (avatarName != null) ? avatarName : null
+                }
+
+                await User.update(userdata, {
+                        where: {
+                            user_id: req.decoded.user_id
+                        }
+                    })
+                    .then((result) => {
+                        res.status(200).json({
+                            message: 'update success',
+                            status: true
+                        })
+                    })
+                    .catch((err) => {
+                        res.status(401).json({
+                            message: err
+                        })
+                    })
             })
             .catch((err) => {
-                res.status(500).json({
+                res.status(401).json({
                     message: err
                 })
             })
     },
-    deleteData: (req, res) => {
-        User.destroy({
+    deleteData: async (req, res) => {
+        await User.destroy({
                 where: {
-                    id: req.body.id
+                    user_id: req.body.user_id
                 }
             })
             .then((result) => {
@@ -285,7 +335,7 @@ const users = {
     forgotPassword: (req, res) => {
         async.waterfall([
             (done) => {
-                crypto.randomBytes(20, (err, buf) => {
+                crypto.randomBytes(15, (err, buf) => {
                     let token = buf.toString('hex')
                     done(err, token)
                 })
@@ -298,8 +348,9 @@ const users = {
                     })
                     .then(user => {
                         if (!user) {
-                            return res.status(409).json({
-                                message: 'email not found.'
+                            return res.status(200).json({
+                                message: 'email not found.',
+                                status: false
                             })
                         }
                         User.update({
@@ -338,7 +389,7 @@ const users = {
                     from: 'Kai Delivery',
                     subject: 'Kai Delivery Password Reset',
                     text: 'Please click on the following link, or paste into you browser to complete\n' +
-                        'http://localhost:3000/reset/' + token,
+                        'http://localhost:3001/reset/' + token,
                 }
                 smtpTransport.sendMail(mailOptions, (err) => {
                     if (err) {
@@ -347,7 +398,8 @@ const users = {
                         })
                     }
                     res.status(200).json({
-                        message: 'sended email.'
+                        message: 'sended email.',
+                        status: true
                     })
                     done(err, 'done')
                 })
@@ -360,7 +412,7 @@ const users = {
     },
     resetPassword: async (req, res) => {
         await User.findOne({
-                attributes: ['id'],
+                attributes: ['user_id'],
                 where: {
                     resetPasswordToken: req.params.token,
                     resetPasswordExpired: {
@@ -391,7 +443,7 @@ const users = {
                             resetPasswordExpired: null
                         }, {
                             where: {
-                                id: user.id
+                                user_id: user.user_id
                             }
                         })
                         .then(() => {
@@ -406,6 +458,101 @@ const users = {
                     message: err
                 })
             })
+    },
+    checkResetPasswordToken: async (req, res) => {
+        await User.findOne({
+                attributes: ['resetPasswordToken'],
+                where: {
+                    resetPasswordToken: req.params.token,
+                }
+            })
+            .then((user) => {
+                if (!user) {
+                    return res.json({
+                        status: false
+                    })
+                }
+                res.json({
+                    status: true
+                })
+            })
+    },
+    loginFacebook: async (req, res) => {
+        await User.findOne({
+                attributes: [
+                    'user_id',
+                    'email',
+                    'provider_id'
+                ],
+                where: {
+                    provider_id: req.body.provider_id
+                }
+            })
+            .then(async (user) => {
+                if (user) {
+                    const response = helperUser.loginJWT(user)
+                    return res.status(200).json(response)
+                }
+                await User.findOne({
+                        attributes: [
+                            'user_id',
+                            'email',
+                            'avatar'
+                        ],
+                        where: {
+                            email: req.body.email
+                        }
+                    })
+                    .then(async (user) => {
+                        const avatarName = await downloadImageFromUrl(req.body.image, req.body.provider_id)
+                        if (!user) {
+                            await User.create({
+                                    name: spreadNameFromFacebook(req.body.name)[0],
+                                    lastname: spreadNameFromFacebook(req.body.name)[1],
+                                    email: req.body.email,
+                                    provider: '2',
+                                    provider_id: req.body.provider_id,
+                                    avatar: avatarName
+                                })
+                                .then((user) => {
+                                    const response = helperUser.loginJWT(user)
+                                    res.status(200).json(response)
+                                })
+                        }
+
+                        if (user.avatar) {
+                            await unlinkdir(pathName + user.avatar)
+                        }
+
+                        await User.update({
+                                username: null,
+                                password: null,
+                                name: spreadNameFromFacebook(req.body.name)[0],
+                                lastname: spreadNameFromFacebook(req.body.name)[1],
+                                provider: '2',
+                                provider_id: req.body.provider_id,
+                                avatar: avatarName
+                            }, {
+                                where: {
+                                    email: req.body.email
+                                }
+                            })
+                            .then(() => {
+                                const response = helperUser.loginJWT(user)
+                                res.status(200).json(response)
+                            })
+                    })
+            })
+            .catch((error) => {
+                res.status(401).json({
+                    err: 'error'
+                })
+            })
+    },
+    test: async (req, res) => {
+        // return res.json({
+        //     kuy: req.decoded
+        // })
     }
 }
 

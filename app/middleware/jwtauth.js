@@ -4,7 +4,7 @@ module.exports = (req, res, next) => {
     let token
 
     if(req.headers.authorization) {
-        token = req.headers.authorization.split(" ")[1]
+        token = req.headers.authorization
     }
 
     if(token) {
@@ -21,8 +21,7 @@ module.exports = (req, res, next) => {
         })
     } else {
         res.status(401).json({
-            message: 'No token provided.',
-            token: token
+            message: 'No token provided.'
         })
     }
 }
