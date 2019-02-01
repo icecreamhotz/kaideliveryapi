@@ -66,7 +66,7 @@ const restaurants = sequelize.define('restaurants', {
         allowNull: true,
     },
     restype_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.STRING,
         allowNull: true,
     }
 }, {

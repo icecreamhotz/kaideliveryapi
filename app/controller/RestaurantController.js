@@ -55,7 +55,7 @@ const restaurant = {
             .then((rest) => {
                 if (!rest) return res.status(200).json({
                     message: 'Success',
-                    data: 'No data'
+                    data: []
                 })
                 res.status(200).json({
                     message: 'Success',
@@ -72,12 +72,13 @@ const restaurant = {
         await Restaurants.findAll({
                 where: {
                     user_id: req.decoded.user_id
-                }
+                },
+                attributes: ['res_id', 'res_name']
             })
             .then((rest) => {
                 if (!rest) return res.status(200).json({
                     message: 'Success',
-                    data: 'No data.'
+                    data: []
                 })
                 res.status(200).json({
                     message: 'Success',
@@ -90,14 +91,17 @@ const restaurant = {
                 })
             })
     },
-    getRestaurantDataById: async (req, res) => {
-        await Restaurants.findByPk(req.params.restId, {
-                include: Locations
+    getRestaurantDataByName: async (req, res) => {
+        await Restaurants.findOne({
+                where: {
+                    res_name: decodeURI(req.params.resName),
+                    user_id: req.decoded.user_id
+                }
             })
             .then((rest) => {
                 if (!rest) return res.status(200).json({
-                    message: 'Success',
-                    data: 'No data'
+                    message: 'success',
+                    data: []
                 })
                 res.status(200).json({
                     message: 'Success',
@@ -133,7 +137,13 @@ const restaurant = {
     },
     updateRestaurantData: async (req, res) => {
 
-        await Restaurants.findByPk(req.params.restId)
+        await Restaurants.findOne({
+                where: {
+                    res_name: req.body.res_name,
+                    user_id: req.decoded.user_id
+                },
+                attributes: ['res_logo']
+            })
             .then(async (rest) => {
                 if (!rest) {
                     if (req.file) {
@@ -161,17 +171,20 @@ const restaurant = {
                         res_open: req.body.res_open,
                         res_close: req.body.res_close,
                         res_holiday: req.body.res_holiday,
-                        res_status: '0',
-                        open_status: '0',
-                        res_logo: (logoName != null) ? logoName : null
+                        res_lat: req.body.res_position[0],
+                        res_lng: req.body.res_position[1],
+                        restype_id: req.body.res_typesValue,
+                        res_logo: (logoName !== null) ? logoName : null
                     }, {
                         where: {
-                            res_id: rest.res_id
+                            res_name: decodeURI(req.params.resName),
+                            user_id: req.decoded.user_id
                         }
                     })
                     .then((result) => {
                         res.status(200).json({
-                            message: 'Update complete'
+                            message: 'Update complete',
+                            data: true
                         })
                     })
                     .catch((err) => {

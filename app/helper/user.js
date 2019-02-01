@@ -7,7 +7,7 @@ const helperUser = {
             email: user.email
         }
         const token = jwt.sign(userdata, process.env.JWT_SECRET, {
-            expiresIn: '1h'
+            expiresIn: '10h'
         })
         const response = {
             message: 'Login Successful.',
