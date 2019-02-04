@@ -71,7 +71,7 @@ const insertUser = async (req, res) => {
             }
             await User.create(user)
                 .then(result => {
-                    const response = helperUser.loginJWT(user)
+                    const response = helperUser.loginJWT(result)
                     res.status(200).json(response)
                 })
                 .catch(err => {
@@ -169,7 +169,6 @@ const users = {
     },
     loginUsers: async (req, res) => {
         await User.findOne({
-                attributes: ['user_id', 'username', 'password', 'email'],
                 where: {
                     username: req.body.username
                 }

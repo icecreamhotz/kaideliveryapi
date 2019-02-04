@@ -29,7 +29,7 @@ router.post(
     [upload.single("image"), jwtauth],
     restaurants.insertRestaurant
 );
-router.post("/delete", restaurants.deleteRestaurantAllData);
+router.post("/delete", jwtauth, restaurants.deleteRestaurantAllData);
 router.post(
     "/update/:resName",
     [upload.single("image"), jwtauth],
