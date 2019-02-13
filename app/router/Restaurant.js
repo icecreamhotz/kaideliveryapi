@@ -7,33 +7,35 @@ const path = require("path");
 const jwtauth = require("../middleware/jwtauth");
 
 const pathName =
-    path.dirname(require.main.filename) + "/public/images/restaurants/";
+  path.dirname(require.main.filename) + "/public/images/restaurants/";
+
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, pathName);
-    },
-    filename: (req, file, cb) => {
-        cb(null, "res_" + moment().format("YYYYMMDDhhmmss") + ".jpg");
-    }
+  destination: (req, file, cb) => {
+    cb(null, pathName);
+  },
+  filename: (req, file, cb) => {
+    cb(null, "res_" + moment().format("YYYYMMDDhhmmss") + ".jpg");
+  }
 });
 
 const upload = multer({
-    storage: storage
+  storage: storage
 });
 
 router.get("/", restaurants.getRestaurantData);
 router.get("/owner", jwtauth, restaurants.getRestaurantForManage);
-router.get("/:resName", jwtauth, restaurants.getRestaurantDataByName);
+router.post("/", jwtauth, restaurants.getRestaurantDataByName);
 router.post(
-    "/create",
-    [upload.single("image"), jwtauth],
-    restaurants.insertRestaurant
+  "/create",
+  [upload.single("image"), jwtauth],
+  restaurants.insertRestaurant
 );
 router.post("/delete", jwtauth, restaurants.deleteRestaurantAllData);
 router.post(
-    "/update/:resName",
-    [upload.single("image"), jwtauth],
-    restaurants.updateRestaurantData
+  "/update/:resName",
+  [upload.single("image"), jwtauth],
+  restaurants.updateRestaurantData
 );
+router.get("/:restId", jwtauth, restaurants.getRestaurantDataById);
 
 module.exports = router;

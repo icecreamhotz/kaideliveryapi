@@ -2,9 +2,7 @@ const Restaurants = require("../model/Restaurants");
 const Locations = require("../model/Locations");
 const sharp = require("sharp"),
   fs = require("fs");
-const {
-  promisify
-} = require("util");
+const { promisify } = require("util");
 const path = require("path");
 
 const pathName =
@@ -16,18 +14,22 @@ const writefiledir = promisify(fs.writeFile);
 
 sharp.cache(false);
 
-const writeImage = path => {
-  sharp(path)
-    .resize(150, 150)
-    .toBuffer(async (err, buffer) => {
-      if (err) throw err;
-      await writefiledir(path, buffer);
-    });
+const writeImage = file => {
+  return new Promise((resolve, reject) => {
+    sharp(file.path)
+      .resize(150, 150)
+      .toBuffer((err, buffer) => {
+        if (err) return reject(err);
+        writefiledir(file.path, buffer);
+        resolve();
+      });
+  });
 };
 
 let logoName = null;
+
 const settingImage = async (logo, file) => {
-  if (logo != null) {
+  if (logo !== null) {
     try {
       const checkFile = await readdir(pathName + logo);
       if (checkFile) {
@@ -46,6 +48,7 @@ const settingImage = async (logo, file) => {
     if (file) {
       await writeImage(file.path);
       logoName = file.filename;
+      console.log(file.filename);
     }
   }
 };
@@ -53,8 +56,8 @@ const settingImage = async (logo, file) => {
 const restaurant = {
   getRestaurantData: async (req, res) => {
     await Restaurants.findAll({
-        include: Locations
-      })
+      include: Locations
+    })
       .then(rest => {
         if (!rest)
           return res.status(200).json({
@@ -74,11 +77,11 @@ const restaurant = {
   },
   getRestaurantForManage: async (req, res) => {
     await Restaurants.findAll({
-        where: {
-          user_id: req.decoded.user_id
-        },
-        attributes: ["res_id", "res_name"]
-      })
+      where: {
+        user_id: req.decoded.user_id
+      },
+      attributes: ["res_id", "res_name"]
+    })
       .then(rest => {
         if (!rest)
           return res.status(200).json({
@@ -98,11 +101,37 @@ const restaurant = {
   },
   getRestaurantDataByName: async (req, res) => {
     await Restaurants.findOne({
-        where: {
-          res_name: decodeURI(req.params.resName),
-          user_id: req.decoded.user_id
-        }
+      attributes: ["res_id"],
+      where: {
+        res_name: req.body.res_name,
+        user_id: req.decoded.user_id
+      }
+    })
+      .then(rest => {
+        if (!rest)
+          return res.status(200).json({
+            message: "success",
+            data: []
+          });
+
+        res.status(200).json({
+          message: "Success",
+          data: rest
+        });
       })
+      .catch(err => {
+        res.status(409).json({
+          message: err
+        });
+      });
+  },
+  getRestaurantDataById: async (req, res) => {
+    await Restaurants.findOne({
+      where: {
+        res_id: req.params.restId,
+        user_id: req.decoded.user_id
+      }
+    })
       .then(rest => {
         if (!rest)
           return res.status(200).json({
@@ -141,14 +170,14 @@ const restaurant = {
   },
   insertRestaurant: async (req, res) => {
     if (req.file) {
-      await writeImage(req.file.path);
+      await writeImage(req.file);
     }
 
     await Restaurants.create({
-        res_name: req.body.res_name,
-        res_logo: req.file ? req.file.filename : null,
-        user_id: req.decoded.user_id
-      })
+      res_name: req.body.res_name,
+      res_logo: req.file ? req.file.filename : null,
+      user_id: req.decoded.user_id
+    })
       .then(rest => {
         res.status(200).json({
           message: rest
@@ -162,12 +191,12 @@ const restaurant = {
   },
   updateRestaurantData: async (req, res) => {
     await Restaurants.findOne({
-        where: {
-          res_name: req.body.res_name,
-          user_id: req.decoded.user_id
-        },
-        attributes: ["res_logo"]
-      })
+      where: {
+        res_name: decodeURI(req.params.resName),
+        user_id: req.decoded.user_id
+      },
+      attributes: ["res_logo"]
+    })
       .then(async rest => {
         if (!rest) {
           if (req.file) {
@@ -186,7 +215,8 @@ const restaurant = {
           await settingImage(logoName, req.file);
         }
 
-        await Restaurants.update({
+        await Restaurants.update(
+          {
             res_name: req.body.res_name,
             res_telephone: req.body.res_telephone,
             res_email: req.body.res_email,
@@ -199,12 +229,14 @@ const restaurant = {
             res_lng: req.body.res_lng,
             restype_id: req.body.res_typesValue,
             res_logo: logoName !== null ? logoName : null
-          }, {
+          },
+          {
             where: {
               res_name: decodeURI(req.params.resName),
               user_id: req.decoded.user_id
             }
-          })
+          }
+        )
           .then(result => {
             res.status(200).json({
               message: "Update complete",
@@ -225,11 +257,11 @@ const restaurant = {
   },
   deleteRestaurantAllData: async (req, res) => {
     await Restaurants.destroy({
-        where: {
-          res_name: req.body.res_name,
-          user_id: req.decoded.user_id
-        }
-      })
+      where: {
+        res_name: req.body.res_name,
+        user_id: req.decoded.user_id
+      }
+    })
       .then(result => {
         if (!result)
           return res.status(200).json({

@@ -3,7 +3,9 @@ const RestaurantTypes = require('../model/RestaurantTypes')
 
 const restaurantTypes = {
     getAllRestaurantTypes: async (req, res) => {
-        await RestaurantTypes.findAll()
+        await RestaurantTypes.findAll({
+            attributes: ['restype_id', 'restype_name']
+        })
             .then(types => {
                 if (!types) return res.status(200).json({
                     message: 'success',
