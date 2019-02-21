@@ -5,8 +5,8 @@ const multer = require("multer");
 const moment = require("moment");
 const path = require("path");
 
-const pathName =
-  path.dirname(require.main.filename) + "/public/images/restaurants/";
+const dirName = path.dirname(require.main.filename);
+const pathName = `${dirName}/public/images/restaurants/`;
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {

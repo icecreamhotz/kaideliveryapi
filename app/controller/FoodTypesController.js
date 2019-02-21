@@ -1,4 +1,6 @@
-const FoodTypes = require("../model/FoodTypes");
+const models = require("../model");
+
+const FoodTypes = models.FoodType;
 
 const foodTypes = {
   getAllFoodTypes: async (req, res) => {
@@ -15,7 +17,7 @@ const foodTypes = {
         });
       })
       .catch(err => {
-        res.status(409).json({
+        res.status(500).json({
           message: err
         });
       });

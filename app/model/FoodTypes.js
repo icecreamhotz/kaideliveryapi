@@ -1,25 +1,24 @@
-const Sequelize = require("sequelize");
-const sequelize = require("../config/db_connection");
-
-const foodtypes = sequelize.define(
-  "foodtypes",
-  {
-    foodtype_id: {
-      type: Sequelize.INTEGER(2),
-      primaryKey: true,
-      autoIncrement: true
+module.exports = (sequelize, DataTypes) => {
+  const FoodType = sequelize.define(
+    "foodtypes",
+    {
+      foodtype_id: {
+        type: DataTypes.INTEGER(2),
+        primaryKey: true,
+        autoIncrement: true
+      },
+      foodtype_name: {
+        type: DataTypes.STRING(30)
+      },
+      foodtype_details: {
+        type: DataTypes.STRING(100),
+        allowNull: true
+      }
     },
-    foodtype_name: {
-      type: Sequelize.STRING(30)
-    },
-    foodtype_details: {
-      type: Sequelize.STRING(100),
-      allowNull: true
+    {
+      timestamps: false
     }
-  },
-  {
-    timestamps: false
-  }
-);
+  );
 
-module.exports = foodtypes;
+  return FoodType;
+};

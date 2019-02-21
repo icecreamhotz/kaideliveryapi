@@ -1,5 +1,5 @@
-const Restaurants = require("../model/Restaurants");
-const Locations = require("../model/Locations");
+const models = require("../model");
+const User = require("../model/Users");
 const sharp = require("sharp"),
   fs = require("fs");
 const { promisify } = require("util");
@@ -34,9 +34,11 @@ const settingImage = async (logo, file) => {
       const checkFile = await readdir(pathName + logo);
       if (checkFile) {
         if (file) {
+          console.log(file);
           await unlinkdir(pathName + logo);
           await writeImage(file.path);
           logoName = file.filename;
+          console.log("sssssssssssssssssssssssssssss" + logoName);
         }
       }
     } catch (err) {
@@ -53,11 +55,11 @@ const settingImage = async (logo, file) => {
   }
 };
 
+const Restaurants = models.Restaurant;
+
 const restaurant = {
   getRestaurantData: async (req, res) => {
-    await Restaurants.findAll({
-      include: Locations
-    })
+    await Restaurants.findAll()
       .then(rest => {
         if (!rest)
           return res.status(200).json({
@@ -70,7 +72,35 @@ const restaurant = {
         });
       })
       .catch(err => {
-        res.status(409).json({
+        res.status(500).json({
+          message: err
+        });
+      });
+  },
+  getRestaurantWithOwnerData: async (req, res) => {
+    await Restaurants.findAll({
+      include: [
+        {
+          model: models.User,
+          attributes: ["name", "lastname"],
+          required: false
+        }
+      ]
+    })
+      .then(rest => {
+        if (!rest)
+          return res.status(200).json({
+            message: "Success",
+            data: []
+          });
+
+        res.status(200).json({
+          message: "Success",
+          data: rest
+        });
+      })
+      .catch(err => {
+        res.status(500).json({
           message: err
         });
       });
@@ -88,13 +118,14 @@ const restaurant = {
             message: "Success",
             data: []
           });
+
         res.status(200).json({
           message: "Success",
           data: rest
         });
       })
       .catch(err => {
-        res.status(409).json({
+        res.status(500).json({
           message: err
         });
       });
@@ -120,7 +151,7 @@ const restaurant = {
         });
       })
       .catch(err => {
-        res.status(409).json({
+        res.status(500).json({
           message: err
         });
       });
@@ -163,7 +194,7 @@ const restaurant = {
         });
       })
       .catch(err => {
-        res.status(409).json({
+        res.status(500).json({
           message: err
         });
       });
@@ -184,7 +215,7 @@ const restaurant = {
         });
       })
       .catch(err => {
-        res.status(409).json({
+        res.status(500).json({
           message: err
         });
       });
@@ -192,8 +223,7 @@ const restaurant = {
   updateRestaurantData: async (req, res) => {
     await Restaurants.findOne({
       where: {
-        res_name: decodeURI(req.params.resName),
-        user_id: req.decoded.user_id
+        res_id: req.body.res_id
       },
       attributes: ["res_logo"]
     })
@@ -212,6 +242,7 @@ const restaurant = {
         logoName = rest.res_logo;
 
         if (req.file) {
+          console.log("sss");
           await settingImage(logoName, req.file);
         }
 
@@ -227,30 +258,30 @@ const restaurant = {
             res_holiday: req.body.res_holiday,
             res_lat: req.body.res_lat,
             res_lng: req.body.res_lng,
-            restype_id: req.body.res_typesValue,
+            restype_id: req.body.restype_id,
             res_logo: logoName !== null ? logoName : null
           },
           {
             where: {
-              res_name: decodeURI(req.params.resName),
-              user_id: req.decoded.user_id
+              res_id: req.body.res_id
             }
           }
         )
           .then(result => {
+            logoName = null;
             res.status(200).json({
               message: "Update complete",
               data: true
             });
           })
           .catch(err => {
-            res.status(409).json({
+            res.status(500).json({
               message: err
             });
           });
       })
       .catch(err => {
-        res.status(409).json({
+        res.status(500).json({
           message: err
         });
       });
@@ -273,7 +304,38 @@ const restaurant = {
         });
       })
       .catch(err => {
-        res.status(409).json({
+        res.status(500).json({
+          message: err
+        });
+      });
+  },
+  createRestaurantWithoutOwner: async (req, res) => {
+    if (req.file) {
+      await writeImage(req.file);
+    }
+
+    await Restaurants.create({
+      res_name: req.body.res_name,
+      res_telephone: req.body.res_telephone,
+      res_email: req.body.res_email,
+      res_address: req.body.res_address,
+      res_details: req.body.res_details,
+      res_open: req.body.res_open,
+      res_close: req.body.res_close,
+      res_holiday: req.body.res_holiday,
+      res_lat: req.body.res_lat,
+      res_lng: req.body.res_lng,
+      restype_id: req.body.restype_id,
+      res_logo: req.file ? req.file.filename : null,
+      user_id: null
+    })
+      .then(rest => {
+        res.status(200).json({
+          message: rest
+        });
+      })
+      .catch(err => {
+        res.status(500).json({
           message: err
         });
       });

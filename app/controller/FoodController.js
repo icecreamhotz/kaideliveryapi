@@ -1,5 +1,4 @@
-const Restaurants = require("../model/Restaurants");
-const Foods = require("../model/Foods");
+const models = require("../model");
 const sharp = require("sharp"),
   fs = require("fs"),
   moment = require("moment");
@@ -57,6 +56,8 @@ const settingImage = async (res, imgfile) => {
   }
 };
 
+const Foods = models.Food;
+
 const food = {
   countFoodInRestaurant: async (req, res) => {
     await Foods.count().then(total => {
@@ -101,7 +102,7 @@ const food = {
         });
       })
       .catch(err => {
-        res.status(409).json({
+        res.status(500).json({
           message: err
         });
       });
@@ -125,7 +126,7 @@ const food = {
         });
       })
       .catch(err => {
-        res.status(409).json({
+        res.status(500).json({
           message: err
         });
       });
@@ -154,7 +155,7 @@ const food = {
         });
       })
       .catch(err => {
-        res.status(409).json({
+        res.status(500).json({
           message: err
         });
       });
@@ -171,6 +172,7 @@ const food = {
             let oldImg = food_img[0];
             let sendOldImg = [oldImg];
             imgName = [...imgName, oldImg];
+            await insertImage(req.files, req.body.res_id, food_total);
             await settingImage(res, sendOldImg);
           } else {
             if (food_img[1] !== "") {
@@ -185,6 +187,7 @@ const food = {
             let oldImg = food_img[1];
             let sendOldImg = [oldImg];
             await settingImage(res, sendOldImg);
+            await insertImage(req.files, req.body.res_id, food_total);
             imgName = [...imgName, oldImg];
           } else {
             if (food_img[0] !== "") {
@@ -224,7 +227,7 @@ const food = {
         });
       })
       .catch(err => {
-        res.status(409).json({
+        res.status(500).json({
           message: err
         });
       });
@@ -242,7 +245,7 @@ const food = {
         });
       })
       .catch(err => {
-        res.status(409).json({
+        res.status(500).json({
           message: err
         });
       });

@@ -1,68 +1,74 @@
-const Sequelize = require("sequelize");
-const sequelize = require("../config/db_connection");
-const restaurants = require("./Restaurants");
+// const Sequelize = require("sequelize");
+// const sequelize = require("../config/db_connection");
+// const restaurants = require("./Restaurants");
 
-const User = sequelize.define(
-  "users",
-  {
-    user_id: {
-      type: Sequelize.INTEGER,
-      primaryKey: true,
-      autoIncrement: true
+module.exports = (sequelize, DataTypes) => {
+  const User = sequelize.define(
+    "users",
+    {
+      user_id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+      },
+      username: {
+        type: DataTypes.STRING,
+        unique: true,
+        allowNull: true
+      },
+      password: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
+      name: DataTypes.STRING,
+      lastname: DataTypes.STRING,
+      email: {
+        type: DataTypes.STRING,
+        unique: true
+      },
+      telephone: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
+      address: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
+      provider: {
+        type: DataTypes.STRING(1),
+        allowNull: true
+      },
+      provider_id: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
+      avatar: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        unique: true
+      },
+      status: DataTypes.STRING(1),
+      resetPasswordToken: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
+      resetPasswordExpired: {
+        type: DataTypes.DATE,
+        allowNull: true
+      }
     },
-    username: {
-      type: Sequelize.STRING,
-      unique: true,
-      allowNull: true
-    },
-    password: {
-      type: Sequelize.STRING,
-      allowNull: true
-    },
-    name: Sequelize.STRING,
-    lastname: Sequelize.STRING,
-    email: {
-      type: Sequelize.STRING,
-      unique: true
-    },
-    telephone: {
-      type: Sequelize.STRING,
-      allowNull: true
-    },
-    address: {
-      type: Sequelize.STRING,
-      allowNull: true
-    },
-    provider: {
-      type: Sequelize.STRING(1),
-      allowNull: true
-    },
-    provider_id: {
-      type: Sequelize.STRING,
-      allowNull: true
-    },
-    avatar: {
-      type: Sequelize.STRING,
-      allowNull: true,
-      unique: true
-    },
-    status: Sequelize.STRING(1),
-    resetPasswordToken: {
-      type: Sequelize.STRING,
-      allowNull: true
-    },
-    resetPasswordExpired: {
-      type: Sequelize.DATE,
-      allowNull: true
+    {
+      timestamps: true,
+      createdAt: "created_at",
+      updatedAt: "updated_at"
     }
-  },
-  {
-    timestamps: true,
-    createdAt: "created_at",
-    updatedAt: "updated_at"
-  }
-);
+  );
 
-User.hasMany(restaurants, { as: "restaurants", foreignKey: "user_id" });
+  User.associate = function(models) {
+    models.User.hasMany(models.Restaurant, {
+      foreignKey: "user_id"
+    });
+  };
 
-module.exports = User;
+  return User;
+};
