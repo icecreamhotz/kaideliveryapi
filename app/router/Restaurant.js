@@ -37,12 +37,12 @@ router.post(
   [upload.single("image"), jwtauth],
   restaurants.createRestaurantWithoutOwner
 );
-
 router.post("/delete", jwtauth, restaurants.deleteRestaurantAllData);
 router.post(
   "/update",
   [upload.single("image"), jwtauth],
   restaurants.updateRestaurantData
 );
+router.post("/verify", jwtauth, restaurants.verifyRestaurant);
 
 module.exports = router;

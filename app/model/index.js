@@ -21,6 +21,7 @@ db.FoodType = db.sequelize.import("./FoodTypes.js");
 db.Food = db.sequelize.import("./Foods.js");
 db.EmployeeType = db.sequelize.import("./EmployeeTypes.js");
 db.Employee = db.sequelize.import("./Employees.js");
+db.Rate = db.sequelize.import("./Rates.js");
 
 Object.keys(db).forEach(key => {
   if (db[key] && db[key].associate) {

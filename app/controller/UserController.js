@@ -21,6 +21,8 @@ const readdir = promisify(fs.exists);
 const unlinkdir = promisify(fs.unlink);
 const writefiledir = promisify(fs.writeFile);
 
+sharp.cache(false);
+
 const writeImage = path => {
   return new Promise((resolve, reject) => {
     sharp(path)

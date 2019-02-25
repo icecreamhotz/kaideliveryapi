@@ -180,7 +180,6 @@ const food = {
               imgName = [...imgName, food_img[1]];
             }
           }
-          console.log("yoohoo");
         }
         if (posImg === "2") {
           if (food_img[1] !== "") {

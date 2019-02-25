@@ -38,5 +38,6 @@ router.post("/login", employees.loginEmployee);
 router.post("/update/password", jwtauth, employees.updatePasswordById);
 router.post("/delete", jwtauth, employees.deleteEmployee);
 router.post("/username", employees.checkUsername);
+router.post("/verify", jwtauth, employees.verifyEmployee);
 
 module.exports = router;

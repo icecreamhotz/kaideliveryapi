@@ -16,6 +16,8 @@ const readdir = promisify(fs.exists);
 const unlinkdir = promisify(fs.unlink);
 const writefiledir = promisify(fs.writeFile);
 
+sharp.cache(false);
+
 const writeImage = path => {
   return new Promise((resolve, reject) => {
     sharp(path)
@@ -321,6 +323,30 @@ const employees = {
       .catch(err => {
         res.status(500).json({
           message: err
+        });
+      });
+  },
+  verifyEmployee: async (req, res) => {
+    await Employees.update(
+      {
+        emp_verified: req.body.emp_verified
+      },
+      {
+        where: {
+          emp_id: req.body.emp_id
+        }
+      }
+    )
+      .then(() => {
+        res.status(200).json({
+          message: "update success",
+          status: true
+        });
+      })
+      .catch(err => {
+        res.status(500).json({
+          message: err,
+          status: false
         });
       });
   }

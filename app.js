@@ -49,6 +49,7 @@ app.use("/api/v1/foods", require("./app/router/Food"));
 app.use("/api/v1/foodtypes", require("./app/router/FoodTypes"));
 app.use("/api/v1/employees", require("./app/router/Employee"));
 app.use("/api/v1/employeetypes", require("./app/router/EmployeeTypes"));
+app.use("/api/v1/rates", require("./app/router/Rate"));
 
 app.get("/session", (req, res) => {
   console.log(req.session.userId);
