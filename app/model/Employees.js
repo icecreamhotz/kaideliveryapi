@@ -56,5 +56,11 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
+  Employee.associate = function(models) {
+    models.Employee.hasMany(models.Order, {
+      foreignKey: "emp_id"
+    });
+  };
+
   return Employee;
 };

@@ -24,6 +24,7 @@
     "multer": "^1.4.1",
     "mysql": "^2.16.0",
     "mysql2": "^1.6.1",
+    "nexmo": "^2.4.1",
     "nodemailer": "^4.6.8",
     "passport": "^0.4.0",
     "passport-facebook": "^2.1.1",
@@ -39,7 +40,14 @@
   },
   "babel": {
     "presets": [
-      ["env", { "exclude": ["transform-es2015-classes"] }]
+      [
+        "env",
+        {
+          "exclude": [
+            "transform-es2015-classes"
+          ]
+        }
+      ]
     ]
   }
 }

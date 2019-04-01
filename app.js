@@ -19,13 +19,13 @@ app.use(
 );
 app.use(express.static(__dirname + "/public/images"));
 
-// app.use(function(req, res, next) {
-//     res.setHeader("Access-Control-Allow-Origin", "*");
-//     res.setHeader("Access-Control-Allow-Credentials", "true");
-//     res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
-//     res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Authorization');
-//     next();
-// });
+app.use(function(req, res, next) {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Authorization');
+    next();
+});
 
 // app.use(cookieParser())
 // app.use(session({
@@ -50,6 +50,8 @@ app.use("/api/v1/foodtypes", require("./app/router/FoodTypes"));
 app.use("/api/v1/employees", require("./app/router/Employee"));
 app.use("/api/v1/employeetypes", require("./app/router/EmployeeTypes"));
 app.use("/api/v1/rates", require("./app/router/Rate"));
+app.use("/api/v1/orders", require("./app/router/Order"));
+app.use("/api/v1/orderdetails", require("./app/router/OrderDetail"));
 
 app.get("/session", (req, res) => {
   console.log(req.session.userId);

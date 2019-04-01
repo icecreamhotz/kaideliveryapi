@@ -84,6 +84,9 @@ module.exports = (sequelize, DataTypes) => {
     models.Restaurant.belongsTo(models.User, {
       foreignKey: "user_id"
     });
+    models.Restaurant.hasMany(models.Order, {
+      foreignKey: "res_id"
+    });
   };
 
   return Restaurant;

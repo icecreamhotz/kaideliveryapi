@@ -63,7 +63,6 @@ const settingImage = async (logo, file) => {
 /************************* **************************/
 
 const saveUser = async (req, res) => {
-  console.log(req.body.password);
   await bcrypt.hash(req.body.password, 10, async (err, hash) => {
     if (err) {
       return res.status(500).json({
@@ -86,6 +85,7 @@ const saveUser = async (req, res) => {
         })
         .catch(err => {
           res.status(500).json({
+            message: "Something has wrong",
             error: err
           });
         });
@@ -190,18 +190,22 @@ const users = {
       const match = await bcrypt.compare(req.body.password, user.password);
       if (!match) {
         return res.status(401).json({
+          status: false,
+          data: null,
           message: "Please check username or password."
         });
       }
       const response = helperUser.loginJWT(user);
       return res.status(200).json({
         status: true,
-        response
+        message: "Login successful.",
+        data: response
       });
     } else {
       res.status(200).json({
         message: "Please check username or password.",
-        status: false
+        status: false,
+        data: null
       });
     }
   },
@@ -626,6 +630,8 @@ const users = {
           avatar: avatarName !== null ? avatarName : null
         };
 
+        console.log(user);
+
         await User.create(user)
           .then(result => {
             avatarName = null;
@@ -634,6 +640,7 @@ const users = {
             });
           })
           .catch(err => {
+            console.log(err);
             res.status(500).json({
               error: err
             });

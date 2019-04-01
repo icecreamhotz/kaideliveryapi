@@ -258,7 +258,7 @@ const restaurant = {
             res_holiday: req.body.res_holiday,
             res_lat: req.body.res_lat,
             res_lng: req.body.res_lng,
-            restype_id: req.body.restype_id,
+            restype_id: req.body.res_typesValue,
             res_logo: logoName !== null ? logoName : null
           },
           {
@@ -360,6 +360,30 @@ const restaurant = {
         res.status(500).json({
           message: err,
           status: false
+        });
+      });
+  },
+  getRestaurantOpenNow: async (req, res) => {
+    await Restaurants.findAll({
+      where: {
+        res_status: "1"
+      }
+    })
+      .then(rest => {
+        if (!rest)
+          return res.status(200).json({
+            message: "Success",
+            data: []
+          });
+
+        res.status(200).json({
+          message: "Success",
+          data: rest
+        });
+      })
+      .catch(err => {
+        res.status(500).json({
+          message: err
         });
       });
   }

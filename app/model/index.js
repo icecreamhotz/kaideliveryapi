@@ -22,6 +22,9 @@ db.Food = db.sequelize.import("./Foods.js");
 db.EmployeeType = db.sequelize.import("./EmployeeTypes.js");
 db.Employee = db.sequelize.import("./Employees.js");
 db.Rate = db.sequelize.import("./Rates.js");
+db.Order = db.sequelize.import("./Orders.js");
+db.OrderDetail = db.sequelize.import("./OrderDetails.js");
+db.OneTimePassword = db.sequelize.import("./OneTimePassword.js");
 
 Object.keys(db).forEach(key => {
   if (db[key] && db[key].associate) {

@@ -6,6 +6,8 @@ const request = require("request");
 const { promisify } = require("util");
 const path = require("path");
 const helperEmployee = require("../helper/employee");
+const Sequelize = require("sequelize");
+const Op = Sequelize.Op;
 /******************* provider image  ********************/
 const dirName = path.dirname(require.main.filename);
 const pathName = `${dirName}/public/images/employees/`;
@@ -86,7 +88,12 @@ const employees = {
         "emp_verified",
         "emp_avatar",
         "emptype_id"
-      ]
+      ],
+      where: {
+        emp_id: {
+          [Op.ne]: req.decoded.emp_id
+        }
+      }
     })
       .then(emp =>
         res.status(200).json({

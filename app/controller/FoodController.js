@@ -164,16 +164,19 @@ const food = {
     const food_img = JSON.parse(req.body.food_img);
     const food_total = JSON.parse(req.body.food_total);
     if (req.files) {
-      if (req.files.length === 1) {
+      if (food_img[0] === "" && food_img[1] === "") {
+        await insertImage(req.files, req.body.res_id, food_total);
+      } else if (req.files.length === 1) {
         const posImg = food_total[0].substr(food_total[0].length - 1);
         console.log(posImg);
         if (posImg === "1") {
           if (food_img[0] !== "") {
             let oldImg = food_img[0];
             let sendOldImg = [oldImg];
-            imgName = [...imgName, oldImg];
-            await insertImage(req.files, req.body.res_id, food_total);
             await settingImage(res, sendOldImg);
+            await insertImage(req.files, req.body.res_id, food_total);
+            imgName = [...imgName, oldImg];
+            console.log(imgName);
           } else {
             if (food_img[1] !== "") {
               await insertImage(req.files, req.body.res_id, food_total);
@@ -195,10 +198,10 @@ const food = {
             }
           }
         }
-      } else {
-        await settingImage(res, food_img);
-        await insertImage(req.files, req.body.res_id, food_total);
       }
+    } else {
+      await settingImage(res, food_img);
+      await insertImage(req.files, req.body.res_id, food_total);
     }
 
     if (food_img[0] !== "" && food_img[1] !== "") {
