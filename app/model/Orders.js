@@ -10,23 +10,23 @@ module.exports = (sequelize, DataTypes) => {
       order_name: {
         type: DataTypes.STRING(16)
       },
+      order_queue: {
+        type: DataTypes.INTEGER(3),
+        allowNull: true
+      },
       order_details: {
         type: DataTypes.STRING(100),
         allowNull: true
       },
+      min_minute: {
+        type: DataTypes.INTEGER(2),
+        allowNull: true
+      },
       user_id: {
-        type: DataTypes.INTEGER(6),
-        references: {
-          model: this.User,
-          key: "user_id"
-        }
+        type: DataTypes.INTEGER(6)
       },
       res_id: {
-        type: DataTypes.INTEGER(4),
-        references: {
-          model: this.Restaurant,
-          key: "res_id"
-        }
+        type: DataTypes.INTEGER(4)
       },
       emp_id: {
         type: DataTypes.INTEGER(3),
@@ -41,11 +41,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true
       },
       rate_id: {
-        type: DataTypes.INTEGER(6),
-        references: {
-          model: this.Rate,
-          key: "rate_id"
-        }
+        type: DataTypes.INTEGER(6)
       },
       pro_id: {
         type: DataTypes.INTEGER(3),
@@ -75,6 +71,9 @@ module.exports = (sequelize, DataTypes) => {
       order_status: {
         type: DataTypes.STRING(1)
       },
+      order_statusdetails: {
+        type: DataTypes.STRING(50)
+      },
       order_timeout: {
         type: DataTypes.TIME,
         allowNull: true
@@ -99,21 +98,6 @@ module.exports = (sequelize, DataTypes) => {
       updatedAt: "updated_at"
     }
   );
-
-  Order.associate = function(models) {
-    models.Order.belongsTo(models.User, {
-      foreignKey: "user_id"
-    });
-    models.Order.belongsTo(models.Restaurant, {
-      foreignKey: "res_id"
-    });
-    models.Order.belongsTo(models.Rate, {
-      foreignKey: "rate_id"
-    });
-    models.Order.hasMany(models.OrderDetail, {
-      foreignKey: "order_id"
-    });
-  };
 
   return Order;
 };

@@ -28,11 +28,5 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  Rate.associate = function(models) {
-    models.Rate.hasMany(models.Order, {
-      foreignKey: "rate_id"
-    });
-  };
-
   return Rate;
 };

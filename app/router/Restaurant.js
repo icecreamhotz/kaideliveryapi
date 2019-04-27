@@ -25,7 +25,7 @@ router.get("/", restaurants.getRestaurantData);
 router.get("/open", restaurants.getRestaurantOpenNow);
 router.get("/owners", restaurants.getRestaurantWithOwnerData);
 router.get("/myrestaurant/owner", jwtauth, restaurants.getRestaurantForManage);
-router.get("/:restId", jwtauth, restaurants.getRestaurantDataById);
+router.get("/:restId", restaurants.getRestaurantDataById);
 
 router.post("/", jwtauth, restaurants.getRestaurantDataByName);
 router.post(

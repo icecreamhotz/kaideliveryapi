@@ -356,6 +356,48 @@ const employees = {
           status: false
         });
       });
+  },
+  getEmployeeWorkerStatusNow: async (req, res) => {
+    await Employees.count({
+      attributes: ["emp_workstatus"],
+      where: {
+        emp_workstatus: 1
+      }
+    })
+      .then(emp => {
+        res.status(200).json({
+          data: emp
+        });
+      })
+      .catch(err => {
+        res.status(500).json({
+          data: err
+        });
+      });
+  },
+  changeWorkStatus: async (req, res) => {
+    await Employees.update(
+      {
+        emp_workstatus: req.body.work_status
+      },
+      {
+        where: {
+          emp_id: 17
+        }
+      }
+    )
+      .then(() => {
+        res.status(200).json({
+          message: "update success",
+          status: true
+        });
+      })
+      .catch(err => {
+        res.status(500).json({
+          message: err,
+          status: false
+        });
+      });
   }
 };
 

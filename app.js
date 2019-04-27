@@ -8,6 +8,9 @@ const cors = require("cors");
 
 require("dotenv").config();
 
+//fcmnotifications
+const fcmnotifications = require("./app/controller/FCMNotificationController");
+
 const app = express();
 
 app.use(cors());
@@ -20,11 +23,14 @@ app.use(
 app.use(express.static(__dirname + "/public/images"));
 
 app.use(function(req, res, next) {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-    res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
-    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Authorization');
-    next();
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "X-Requested-With, Content-Type, Authorization"
+  );
+  next();
 });
 
 // app.use(cookieParser())
@@ -53,8 +59,11 @@ app.use("/api/v1/rates", require("./app/router/Rate"));
 app.use("/api/v1/orders", require("./app/router/Order"));
 app.use("/api/v1/orderdetails", require("./app/router/OrderDetail"));
 
-app.get("/session", (req, res) => {
-  console.log(req.session.userId);
+app.post("/notification", (req, res) => {
+  const message = req.body.message;
+  const fcmToken = req.body.token;
+
+  fcmnotifications(message, fcmToken);
 });
 //
 

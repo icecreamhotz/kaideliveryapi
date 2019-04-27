@@ -43,11 +43,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       user_id: {
         type: DataTypes.INTEGER(6),
-        allowNull: true,
-        references: {
-          model: this.User,
-          key: "user_id"
-        }
+        allowNull: true
       },
       res_logo: {
         type: DataTypes.STRING(40),
@@ -79,15 +75,6 @@ module.exports = (sequelize, DataTypes) => {
       updatedAt: "updated_at"
     }
   );
-
-  Restaurant.associate = function(models) {
-    models.Restaurant.belongsTo(models.User, {
-      foreignKey: "user_id"
-    });
-    models.Restaurant.hasMany(models.Order, {
-      foreignKey: "res_id"
-    });
-  };
 
   return Restaurant;
 };

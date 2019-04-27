@@ -8,11 +8,7 @@ module.exports = (sequelize, DataTypes) => {
         autoIncrement: true
       },
       order_id: {
-        type: DataTypes.INTEGER(6),
-        references: {
-          model: this.Order,
-          key: "order_id"
-        }
+        type: DataTypes.INTEGER(6)
       },
       food_id: {
         type: DataTypes.INTEGER(10)
@@ -28,12 +24,6 @@ module.exports = (sequelize, DataTypes) => {
       timestamps: false
     }
   );
-
-  OrderDetail.association = function(models) {
-    models.OrderDetail.belongTo(models.Order, {
-      foreignKey: "order_id"
-    });
-  };
 
   return OrderDetail;
 };

@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const employees = require("../controller/EmployeeController");
+const employeescores = require("../controller/EmployeeScoreController");
 const multer = require("multer");
 const jwtauth = require("../middleware/jwtauth");
 const moment = require("moment");
@@ -23,6 +24,7 @@ const upload = multer({
 
 router.get("/", jwtauth, employees.getAllEmployee);
 router.get("/info", jwtauth, employees.getEmployeeById);
+router.get("/working", employees.getEmployeeWorkerStatusNow);
 router.post("/register", upload.single("image"), employees.insertEmployee);
 router.post(
   "/update/info",
@@ -39,5 +41,10 @@ router.post("/update/password", jwtauth, employees.updatePasswordById);
 router.post("/delete", jwtauth, employees.deleteEmployee);
 router.post("/username", employees.checkUsername);
 router.post("/verify", jwtauth, employees.verifyEmployee);
+router.post("/working", employees.changeWorkStatus);
+
+//score
+router.get("/score/:empId", employeescores.getScoreEmployee);
+router.get("/score/comment/:empId", employeescores.getScoreAndCommentEmployee);
 
 module.exports = router;
