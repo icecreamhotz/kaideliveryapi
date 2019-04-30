@@ -1,4 +1,5 @@
 const models = require("../model");
+const sequelize = require("sequelize");
 const User = require("../model/Users");
 const sharp = require("sharp"),
   fs = require("fs");
@@ -59,7 +60,16 @@ const Restaurants = models.Restaurant;
 
 const restaurant = {
   getRestaurantData: async (req, res) => {
-    await Restaurants.findAll()
+    await Restaurants.findAll({
+      attributes: Object.keys(Restaurants.attributes).concat([
+        [
+          sequelize.literal(
+            "(SELECT AVG(restaurantscores.resscore_rating) FROM restaurantscores WHERE restaurantscores.res_id=restaurants.res_id)"
+          ),
+          "rating"
+        ]
+      ])
+    })
       .then(rest => {
         if (!rest)
           return res.status(200).json({
@@ -160,7 +170,15 @@ const restaurant = {
     await Restaurants.findOne({
       where: {
         res_id: req.params.restId
-      }
+      },
+      attributes: Object.keys(Restaurants.attributes).concat([
+        [
+          sequelize.literal(
+            "(SELECT AVG(restaurantscores.resscore_rating) FROM restaurantscores WHERE restaurantscores.res_id=restaurants.res_id)"
+          ),
+          "rating"
+        ]
+      ])
     })
       .then(rest => {
         if (!rest)

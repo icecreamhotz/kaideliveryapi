@@ -326,7 +326,7 @@ const order = {
       }
     )
       .then(() => {
-        if (message !== null && fcmToken !== null) {
+        if (typeof message !== "undefined" && typeof fcmToken !== "undefined") {
           fcmnotifications(message, fcmToken);
         }
 
@@ -364,6 +364,60 @@ const order = {
         {
           model: models.User,
           attributes: ["name", "lastname"]
+        }
+      ]
+    })
+      .then(order => {
+        res.status(200).json({
+          message: "Success",
+          data: order
+        });
+      })
+      .catch(err => {
+        res.status(500).json({
+          message: err
+        });
+      });
+  },
+  getOrderDetailAndFoodByName: async (req, res) => {
+    await Orders.findAll({
+      where: {
+        order_name: req.params.orderName
+      },
+      include: [
+        {
+          model: OrderDetails,
+          include: [
+            {
+              model: Foods
+            }
+          ]
+          // attributes: ["food_id", "orderdetail_total", "orderdetail_price"],
+        },
+        {
+          model: models.Employee,
+          attributes: ["emp_name", "emp_lastname", "emp_id", "emp_avatar"],
+          include: [
+            {
+              model: models.EmployeeScore,
+              attributes: [
+                [
+                  sequelize.fn("AVG", sequelize.col("empscore_rating")),
+                  "rating"
+                ]
+              ],
+              group: "emp_id",
+              order: [[sequelize.fn("AVG", sequelize.col("empscore_rating"))]]
+            }
+          ]
+        },
+        {
+          model: models.User,
+          attributes: ["name", "lastname", "user_id", "avatar"]
+        },
+        {
+          model: models.Restaurant,
+          attributes: ["res_id", "res_name", "res_logo"]
         }
       ]
     })

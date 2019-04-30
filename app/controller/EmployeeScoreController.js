@@ -25,18 +25,22 @@ const employeescores = {
         });
       });
   },
-  getScoreEmployee: async (req, res) => {
+  getScoreAndCommentEmployee: async (req, res) => {
     const empId = req.params.empId;
-    await EmployeeScores.findOne({
+    await EmployeeScores.findAll({
       where: {
         emp_id: empId
       },
-      attributes: [
-        "emp_id",
-        [sequelize.fn("AVG", sequelize.col("empscore_rating")), "rating"]
-      ],
-      group: "emp_id",
-      order: [[sequelize.fn("AVG", sequelize.col("empscore_rating"))]]
+      include: [
+        {
+          model: models.User,
+          attributes: ["name", "lastname", "user_id", "avatar"]
+        },
+        {
+          model: models.Employee,
+          attributes: ["emp_name", "emp_lastname", "emp_id", "emp_avatar"]
+        }
+      ]
     })
       .then(empscore => {
         res.status(200).json({
@@ -50,29 +54,6 @@ const employeescores = {
         });
       });
   },
-  getScoreAndCommentEmployee: async (req, res) => {
-    const empId = req.params.empId;
-    await EmployeeScores.findAll({
-      where: {
-        emp_id: empId
-      },
-      include: {
-        model: models.User,
-        attributes: ["name", "lastname", "avatar"]
-      }
-    })
-      .then(empscore => {
-        res.status(200).json({
-          message: "success",
-          data: empscore
-        });
-      })
-      .catch(err => {
-        res.status(500).json({
-          message: err
-        });
-      });
-  }
 };
 
 module.exports = employeescores;

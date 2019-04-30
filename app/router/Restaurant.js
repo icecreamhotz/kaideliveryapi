@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const restaurants = require("../controller/RestaurantController");
+const restaurantscores = require("../controller/RestaurantScoreController");
 const multer = require("multer");
 const moment = require("moment");
 const path = require("path");
@@ -45,5 +46,11 @@ router.post(
   restaurants.updateRestaurantData
 );
 router.post("/verify", jwtauth, restaurants.verifyRestaurant);
+
+//score
+router.get(
+  "/score/comment/:restId",
+  restaurantscores.getScoreAndCommentEmployee
+);
 
 module.exports = router;

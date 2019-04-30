@@ -7,6 +7,7 @@ router.get("/otp/:otp", order.checkValidOTP);
 router.get("/delivery/employee/now", order.getDeliveryEmployeeNow);
 router.get("/delivery/user/now", order.getDeliveryUserNow);
 router.get("/:orderId", order.getOrderDetailAndFood);
+router.get("/name/:orderName", order.getOrderDetailAndFoodByName);
 router.get("/doned/:orderId", order.getOrderIsDoned);
 router.get("/history/employee", order.orderHistoryEmployee);
 router.get("/history/user", order.orderHistoryCustomer);

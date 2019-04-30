@@ -44,7 +44,6 @@ router.post("/verify", jwtauth, employees.verifyEmployee);
 router.post("/working", employees.changeWorkStatus);
 
 //score
-router.get("/score/:empId", employeescores.getScoreEmployee);
 router.get("/score/comment/:empId", employeescores.getScoreAndCommentEmployee);
 
 module.exports = router;

@@ -53,7 +53,7 @@ db.User.hasMany(db.Order, { foreignKey: "user_id" });
 db.User.hasMany(db.RestaurantScore, { foreignKey: "user_id" });
 db.RestaurantScore.belongsTo(db.User, { foreignKey: "user_id" });
 
-db.RestaurantScore.belongsTo(db.User, { foreignKey: "res_id" });
+db.RestaurantScore.belongsTo(db.Restaurant, { foreignKey: "res_id" });
 db.Restaurant.hasMany(db.RestaurantScore, { foreignKey: "res_id" });
 
 db.User.hasMany(db.EmployeeScore, { foreignKey: "user_id" });
