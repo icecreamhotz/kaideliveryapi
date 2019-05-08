@@ -1,27 +1,30 @@
-const jwt = require('jsonwebtoken')
+const jwt = require("jsonwebtoken");
 
 module.exports = (req, res, next) => {
-    let token
+  let token;
 
-    if(req.headers.authorization) {
-        token = req.headers.authorization
-    }
+  if (req.headers.authorization) {
+    token = req.headers.authorization;
+    console.log(token);
+  }
 
-    if(token) {
-        jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-            if(err) {
-                res.status(401).json({
-                    message: 'invalid token.'
-                })
-                return
-            } else {
-                req.decoded = decoded
-                next()
-            }
-        })
-    } else {
+  if (token) {
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) {
+        console.log("err");
         res.status(401).json({
-            message: 'No token provided.'
-        })
-    }
-}
+          message: "invalid token."
+        });
+        return;
+      } else {
+        console.log(decoded);
+        req.decoded = decoded;
+        next();
+      }
+    });
+  } else {
+    res.status(401).json({
+      message: "No token provided."
+    });
+  }
+};

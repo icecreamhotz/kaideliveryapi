@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true
       },
       user_id: {
-        type: DataTypes.INTEGER(6)
+        type: DataTypes.STRING(10)
       },
       res_id: {
         type: DataTypes.INTEGER(4)
@@ -80,6 +80,10 @@ module.exports = (sequelize, DataTypes) => {
       },
       order_deliveryprice: {
         type: DataTypes.DECIMAL(7, 2)
+      },
+      order_price: {
+        type: DataTypes.DECIMAL(8, 2),
+        allowNull: true
       },
       order_discount: {
         type: DataTypes.DECIMAL(7, 2),

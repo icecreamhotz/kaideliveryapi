@@ -27,6 +27,10 @@ db.OrderDetail = db.sequelize.import("./OrderDetails.js");
 db.OneTimePassword = db.sequelize.import("./OneTimePassword.js");
 db.EmployeeScore = db.sequelize.import("./EmployeeScore.js");
 db.RestaurantScore = db.sequelize.import("./RestaurantScore.js");
+db.ChangeList = db.sequelize.import("./ChangeLists.js");
+db.ChangeLog = db.sequelize.import("./ChangeLogs.js");
+db.Account = db.sequelize.import("./Accounts.js");
+db.Expense = db.sequelize.import("./Expenses.js");
 
 db.OrderDetail.belongsTo(db.Order, {
   foreignKey: "order_id"
@@ -61,5 +65,14 @@ db.EmployeeScore.belongsTo(db.User, { foreignKey: "user_id" });
 
 db.Employee.hasMany(db.EmployeeScore, { foreignKey: "emp_id" });
 db.EmployeeScore.belongsTo(db.Employee, { foreignKey: "emp_id" });
+
+db.ChangeList.belongsTo(db.Food, { foreignKey: "food_id" });
+db.Food.hasMany(db.ChangeList, { foreignKey: "food_id" });
+
+db.Employee.hasMany(db.ChangeList, { foreignKey: "emp_id" });
+db.ChangeList.belongsTo(db.Employee, { foreignKey: "emp_id" });
+
+db.Restaurant.hasMany(db.Food, { foreignKey: "res_id" });
+db.Food.belongsTo(db.Restaurant, { foreignKey: "res_id" });
 
 module.exports = db;

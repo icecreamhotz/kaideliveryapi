@@ -12,7 +12,8 @@ const helperUser = {
     const response = {
       message: "Login Successful.",
       token: token,
-      expiresIn: "3600000"
+      expiresIn: "3600000",
+      userId: userdata.user_id
     };
 
     return response;

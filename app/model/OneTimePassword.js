@@ -16,8 +16,8 @@ module.exports = (sequelize, DataTypes) => {
       otp_expiredToken: {
         type: DataTypes.DATE
       },
-      user_id: {
-        type: DataTypes.STRING(6)
+      otp_telephone: {
+        type: DataTypes.STRING(10)
       }
     },
     {

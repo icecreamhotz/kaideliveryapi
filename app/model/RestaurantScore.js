@@ -18,7 +18,8 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE
       },
       user_id: {
-        type: DataTypes.INTEGER(6)
+        type: DataTypes.INTEGER(6),
+        allowNull: true
       },
       res_id: {
         type: DataTypes.INTEGER(4)

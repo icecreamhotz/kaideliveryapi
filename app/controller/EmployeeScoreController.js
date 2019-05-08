@@ -54,6 +54,26 @@ const employeescores = {
         });
       });
   },
+  deleteEmployeeScoreAndComment: async (req, res) => {
+    const empScoreId = req.body.empScoreId;
+    await EmployeeScores.destroy({
+      where: {
+        empscore_id: empScoreId
+      }
+    })
+      .then(() => {
+        res.status(200).json({
+          message: "success",
+          status: true
+        });
+      })
+      .catch(err => {
+        res.status(500).json({
+          message: err,
+          status: false
+        });
+      });
+  }
 };
 
 module.exports = employeescores;

@@ -23,7 +23,7 @@ const upload = multer({
 });
 
 router.get("/", jwtauth, employees.getAllEmployee);
-router.get("/info", jwtauth, employees.getEmployeeById);
+router.get("/info", jwtauth, employees.getEmployeeInfo);
 router.get("/working", employees.getEmployeeWorkerStatusNow);
 router.post("/register", upload.single("image"), employees.insertEmployee);
 router.post(
@@ -41,9 +41,13 @@ router.post("/update/password", jwtauth, employees.updatePasswordById);
 router.post("/delete", jwtauth, employees.deleteEmployee);
 router.post("/username", employees.checkUsername);
 router.post("/verify", jwtauth, employees.verifyEmployee);
-router.post("/working", employees.changeWorkStatus);
+router.post("/working", jwtauth, employees.changeWorkStatus);
 
 //score
 router.get("/score/comment/:empId", employeescores.getScoreAndCommentEmployee);
+router.post(
+  "/score/comment/delete",
+  employeescores.deleteEmployeeScoreAndComment
+);
 
 module.exports = router;

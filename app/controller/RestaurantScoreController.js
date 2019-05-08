@@ -32,6 +32,26 @@ const restaurantscores = {
           message: err
         });
       });
+  },
+  deleteRestaurantScoreAndComment: async (req, res) => {
+    const resscoreId = req.body.resscoreId;
+    await RestaurantScores.destroy({
+      where: {
+        resscore_id: resscoreId
+      }
+    })
+      .then(() => {
+        res.status(200).json({
+          message: "success",
+          status: true
+        });
+      })
+      .catch(err => {
+        res.status(500).json({
+          message: err,
+          status: false
+        });
+      });
   }
 };
 

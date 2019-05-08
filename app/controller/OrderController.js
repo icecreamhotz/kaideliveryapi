@@ -23,7 +23,7 @@ const order = {
   updateOrderFromEmployee: async (req, res) => {
     await Orders.update(
       {
-        emp_id: 17, // dummy emp id
+        emp_id: req.decoded.emp_id, // dummy emp id
         order_status: 1
       },
       {
@@ -51,7 +51,7 @@ const order = {
         order_status: {
           $lte: 3
         },
-        emp_id: 17
+        emp_id: req.decoded.emp_id
       },
       include: [
         {
@@ -104,12 +104,13 @@ const order = {
       });
   },
   getDeliveryUserNow: async (req, res) => {
+    console.log(req.decoded.user_id);
     await Orders.findAll({
       where: {
         order_status: {
           $lte: 3
         },
-        user_id: 86
+        user_id: req.decoded.user_id
       },
       include: [
         {
@@ -251,8 +252,7 @@ const order = {
     await OneTimePasswords.create({
       otp_code: otpcode,
       otp_expiredToken: expiredOtp,
-      otp_telephone: req.body.telephone,
-      user_id: 86
+      otp_telephone: req.body.telephone
     }).then(() => {
       nexmo.message.sendSms(
         from,
@@ -275,6 +275,7 @@ const order = {
   },
   checkValidOTP: async (req, res) => {
     const otp = req.params.otp;
+    const telephone = req.params.telephone;
     console.log(otp);
     await OneTimePasswords.findOne({
       limit: 1,
@@ -283,7 +284,7 @@ const order = {
         otp_expiredToken: {
           $gt: Date.now()
         },
-        user_id: 86
+        otp_telephone: telephone
       },
       order: [["otp_id", "DESC"]]
     })
@@ -315,7 +316,7 @@ const order = {
         : req.body.order_statusdetails;
     await Orders.update(
       {
-        emp_id: 17, // dummy emp id
+        emp_id: req.decoded.empId, // dummy emp id
         order_status: req.body.order_status,
         order_statusdetails: statusDetails
       },
@@ -330,6 +331,30 @@ const order = {
           fcmnotifications(message, fcmToken);
         }
 
+        res.status(200).json({
+          message: "update success",
+          status: true
+        });
+      })
+      .catch(err => {
+        res.status(500).json({
+          message: err,
+          status: false
+        });
+      });
+  },
+  updateCustomPrice: async (req, res) => {
+    await Orders.update(
+      {
+        order_price: req.body.order_price
+      },
+      {
+        where: {
+          order_id: req.body.order_id
+        }
+      }
+    )
+      .then(() => {
         res.status(200).json({
           message: "update success",
           status: true
@@ -436,13 +461,29 @@ const order = {
   orderHistoryEmployee: async (req, res) => {
     await Orders.findAll({
       where: {
-        emp_id: 17
+        emp_id: req.decoded.emp_id
       },
+      attributes: Object.keys(Orders.attributes).concat([
+        [
+          sequelize.literal(
+            "(SELECT SUM(orderdetails.orderdetail_price) FROM orderdetails WHERE orderdetails.order_id = orders.order_id)"
+          ),
+          "totalPrice"
+        ]
+      ]),
       include: [
         { model: models.User, attributes: ["name", "lastname"] },
         {
           model: models.Restaurant,
           attributes: ["res_name", "res_lat", "res_lng"]
+        },
+        {
+          model: models.OrderDetail,
+          include: [
+            {
+              model: models.Food
+            }
+          ]
         }
       ]
     })
@@ -461,13 +502,29 @@ const order = {
   orderHistoryCustomer: async (req, res) => {
     await Orders.findAll({
       where: {
-        user_id: 86
+        user_id: req.decoded.user_id
       },
+      attributes: Object.keys(Orders.attributes).concat([
+        [
+          sequelize.literal(
+            "(SELECT SUM(orderdetails.orderdetail_price) FROM orderdetails WHERE orderdetails.order_id = orders.order_id)"
+          ),
+          "totalPrice"
+        ]
+      ]),
       include: [
         { model: models.Employee, attributes: ["emp_name", "emp_lastname"] },
         {
           model: models.Restaurant,
           attributes: ["res_name", "res_lat", "res_lng"]
+        },
+        {
+          model: models.OrderDetail,
+          include: [
+            {
+              model: models.Food
+            }
+          ]
         }
       ]
     })
@@ -508,7 +565,81 @@ const order = {
           order_details:
             req.body.order_details === "" ? null : req.body.order_details,
           min_minute: minMinute,
-          user_id: 86,
+          user_id: req.decoded.user_id,
+          res_id: req.body.res_id,
+          rate_id: req.body.rate_id,
+          endpoint_name: req.body.endpoint_name,
+          endpoint_lat: req.body.endpoint_lat,
+          endpoint_lng: req.body.endpoint_lng,
+          endpoint_details:
+            req.body.endpoint_details === "" ? null : req.body.endpoint_details,
+          order_deliveryprice: req.body.order_deliveryprice,
+          order_start: req.body.order_start
+        };
+        await Orders.create(orderData)
+          .then(orders => {
+            const getOrderID = orders.order_id;
+            const getOrderName = orders.order_name;
+
+            let promises = menu.map(menu => {
+              return OrderDetails.create({
+                order_id: getOrderID,
+                food_id: menu.food_id,
+                orderdetail_total: menu.orderdetails_total,
+                orderdetail_price: menu.orderdetails_price
+              });
+            });
+
+            Promise.all(promises).then(menu => {
+              res.status(200).json({
+                message: "success",
+                order_id: getOrderID,
+                order_name: getOrderName
+              });
+            });
+          })
+          .catch(err => {
+            res.status(500).json({
+              message: err
+            });
+          });
+        // res.status(200).json({
+        //   message: "success"
+        // });
+      })
+      .catch(err => {
+        res.status(500).json({
+          message: err,
+          status: false
+        });
+      });
+  },
+  addNewOrderGuest: async (req, res) => {
+    await Orders.findOne({
+      where: {
+        $and: [
+          sequelize.where(
+            sequelize.fn("DATE", sequelize.col("created_at")),
+            sequelize.literal("CURRENT_DATE")
+          )
+        ]
+      },
+      order: [["order_queue", "DESC"]]
+    })
+      .then(async order => {
+        const menu = req.body.menu;
+        const dateNow = moment().format("YYYYMMDDhhmmss");
+        const orderName = `OD${dateNow}`;
+        const orderQueue = order === null ? 1 : order.order_queue + 1;
+        const minMinute =
+          req.body.min_minute === 0 ? null : req.body.min_minute;
+        let orderData = {
+          order_name: orderName,
+          order_queue: orderQueue,
+          order_details:
+            req.body.order_details === "" ? null : req.body.order_details,
+          min_minute: minMinute,
+          user_id: req.body.telephone,
           res_id: req.body.res_id,
           rate_id: req.body.rate_id,
           endpoint_name: req.body.endpoint_name,
@@ -737,6 +868,134 @@ const order = {
               message: err
             });
           });
+      })
+      .catch(err => {
+        res.status(500).json({
+          message: err
+        });
+      });
+  },
+  getCustomerUsedTotalByDay: async (req, res) => {
+    const resId = req.params.resId;
+    const date = req.params.date;
+    const startdate = moment(date, "YYYY-MM-DD").toDate();
+    const enddate = moment(date, "YYYY-MM-DD")
+      .add(1, "days")
+      .toDate();
+    await Orders.count({
+      where: {
+        res_id: resId,
+        order_status: 4,
+        created_at: {
+          $between: [startdate, enddate]
+        }
+      }
+    })
+      .then(total => {
+        res.status(200).json({
+          message: "Success",
+          total: total
+        });
+      })
+      .catch(err => {
+        res.status(500).json({
+          message: err
+        });
+      });
+  },
+  getCustomerUsedTotalByMonth: async (req, res) => {
+    const resId = req.params.resId;
+    const date = req.params.date;
+    const startdate = moment(date, "YYYY-MM-DD")
+      .set("date", 1)
+      .toDate();
+    const enddate = moment(date, "YYYY-MM-DD")
+      .set("date", 1)
+      .add(1, "M")
+      .toDate();
+    await Orders.count({
+      where: {
+        res_id: resId,
+        order_status: 4,
+        created_at: {
+          $between: [startdate, enddate]
+        }
+      }
+    })
+      .then(total => {
+        res.status(200).json({
+          message: "Success",
+          total: total
+        });
+      })
+      .catch(err => {
+        res.status(500).json({
+          message: err
+        });
+      });
+  },
+  getCustomerUsedTotalByYear: async (req, res) => {
+    const resId = req.params.resId;
+    const date = req.params.date;
+    const startdate = moment(date, "YYYY-MM-DD")
+      .set("date", 1)
+      .set("months", 0)
+      .toDate();
+    const enddate = moment(date, "YYYY-MM-DD")
+      .set("date", 1)
+      .set("months", 0)
+      .add(1, "year")
+      .toDate();
+    await Orders.count({
+      where: {
+        res_id: resId,
+        order_status: 4,
+        created_at: {
+          $between: [startdate, enddate]
+        }
+      }
+    })
+      .then(total => {
+        res.status(200).json({
+          message: "Success",
+          total: total
+        });
+      })
+      .catch(err => {
+        res.status(500).json({
+          message: err
+        });
+      });
+  },
+  getCustomerUsedTotalByRange: async (req, res) => {
+    const resId = req.params.resId;
+    const date = req.params.date;
+    const enddate = moment(req.params.enddate).add(1, "day");
+    const parseEndDate = moment(enddate).format("YYYY-MM-DD");
+
+    await Orders.count({
+      where: {
+        res_id: resId,
+        order_status: 4,
+        created_at: {
+          $gte: date,
+          $lte: parseEndDate
+        }
+      },
+      attributes: [
+        [
+          sequelize.fn(`date_format`, sequelize.col("created_at"), "%Y-%m-%d"),
+          "date"
+        ],
+        [sequelize.literal(`COUNT(*)`), "count"]
+      ],
+      group: ["date"]
+    })
+      .then(total => {
+        res.status(200).json({
+          message: "Success",
+          total: total
+        });
       })
       .catch(err => {
         res.status(500).json({

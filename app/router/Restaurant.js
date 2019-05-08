@@ -52,5 +52,9 @@ router.get(
   "/score/comment/:restId",
   restaurantscores.getScoreAndCommentEmployee
 );
+router.post(
+  "/score/comment/delete",
+  restaurantscores.deleteRestaurantScoreAndComment
+);
 
 module.exports = router;

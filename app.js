@@ -58,6 +58,10 @@ app.use("/api/v1/employeetypes", require("./app/router/EmployeeTypes"));
 app.use("/api/v1/rates", require("./app/router/Rate"));
 app.use("/api/v1/orders", require("./app/router/Order"));
 app.use("/api/v1/orderdetails", require("./app/router/OrderDetail"));
+app.use("/api/v1/changelists", require("./app/router/ChangeList"));
+app.use("/api/v1/changelogs", require("./app/router/ChangeLog"));
+app.use("/api/v1/accounts", require("./app/router/Account"));
+app.use("/api/v1/expenses", require("./app/router/Expense"));
 
 app.post("/notification", (req, res) => {
   const message = req.body.message;

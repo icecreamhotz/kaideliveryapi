@@ -385,7 +385,15 @@ const restaurant = {
     await Restaurants.findAll({
       where: {
         res_status: "1"
-      }
+      },
+      attributes: Object.keys(Restaurants.attributes).concat([
+        [
+          sequelize.literal(
+            "(SELECT AVG(restaurantscores.resscore_rating) FROM restaurantscores WHERE restaurantscores.res_id=restaurants.res_id)"
+          ),
+          "rating"
+        ]
+      ])
     })
       .then(rest => {
         if (!rest)

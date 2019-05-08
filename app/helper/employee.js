@@ -12,7 +12,8 @@ const helperEmployee = {
     const response = {
       message: "Login Successful",
       token: token,
-      expiresIn: "3600000"
+      expiresIn: "3600000",
+      empId: empdata.emp_id
     };
     return response;
   }

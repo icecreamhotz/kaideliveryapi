@@ -61,7 +61,7 @@ const settingImage = async (logo, file) => {
 const Employees = models.Employee;
 
 const employees = {
-  getEmployeeById: async (req, res) => {
+  getEmployeeInfo: async (req, res) => {
     await Employees.findByPk(req.decoded.emp_id)
       .then(emp =>
         res.status(200).json({
@@ -87,13 +87,20 @@ const employees = {
         "emp_address",
         "emp_verified",
         "emp_avatar",
-        "emptype_id"
+        "emptype_id",
+        [
+          Sequelize.literal(
+            "(SELECT AVG(employeescores.empscore_rating) FROM employeescores WHERE employeescores.emp_id=employees.emp_id)"
+          ),
+          "rating"
+        ]
       ],
       where: {
         emp_id: {
           [Op.ne]: req.decoded.emp_id
         }
-      }
+      },
+      order: [["emp_id", "ASC"]]
     })
       .then(emp =>
         res.status(200).json({
@@ -276,13 +283,16 @@ const employees = {
       );
       if (!match) {
         return res.status(200).json({
+          status: false,
+          data: null,
           message: "Please check username or password."
         });
       }
       const response = helperEmployee.loginJWT(emp);
       return res.status(200).json({
         status: true,
-        response
+        message: "Login successful.",
+        data: response
       });
     } else {
       res.status(200).json({
@@ -382,7 +392,7 @@ const employees = {
       },
       {
         where: {
-          emp_id: 17
+          emp_id: req.decoded.emp_id
         }
       }
     )
