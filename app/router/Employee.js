@@ -25,6 +25,14 @@ const upload = multer({
 router.get("/", jwtauth, employees.getAllEmployee);
 router.get("/info", jwtauth, employees.getEmployeeInfo);
 router.get("/working", employees.getEmployeeWorkerStatusNow);
+router.get("/income/day/:date", employees.getEmployeeIncomeTotalByDay);
+router.get("/income/month/:date", employees.getEmployeeIncomeTotalByMonth);
+router.get("/income/year/:date", employees.getEmployeeIncomeTotalByYear);
+router.get(
+  "/income/range/:startDate/:endDate",
+  employees.getEmployeeIncomeTotalByRange
+);
+
 router.post("/register", upload.single("image"), employees.insertEmployee);
 router.post(
   "/update/info",
@@ -49,5 +57,10 @@ router.post(
   "/score/comment/delete",
   employeescores.deleteEmployeeScoreAndComment
 );
+
+//salary
+router.get("/report/salary/chart/day/:date", employees.getSalaryListByDay);
+router.get("/report/salary/chart/month/:date", employees.getSalaryListByMonth);
+router.get("/report/salary/chart/year/:date", employees.getSalaryListByYear);
 
 module.exports = router;

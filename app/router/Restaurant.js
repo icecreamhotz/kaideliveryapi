@@ -45,6 +45,7 @@ router.post(
   [upload.single("image"), jwtauth],
   restaurants.updateRestaurantData
 );
+router.post("/update/quota", jwtauth, restaurants.updateQuotaRestaurant);
 router.post("/verify", jwtauth, restaurants.verifyRestaurant);
 
 //score
@@ -55,6 +56,25 @@ router.get(
 router.post(
   "/score/comment/delete",
   restaurantscores.deleteRestaurantScoreAndComment
+);
+
+//share
+router.get("/report/share/chart/day/:date", restaurants.getQuotaTotalByDay);
+router.get("/report/share/chart/month/:date", restaurants.getQuotaTotalByMonth);
+router.get("/report/share/chart/year/:date", restaurants.getQuotaTotalByYear);
+
+// total user
+router.get(
+  "/report/user/chart/day/:date",
+  restaurants.getUserUsingAppTotalByDay
+);
+router.get(
+  "/report/user/chart/month/:date",
+  restaurants.getUserUsingAppTotalByMonth
+);
+router.get(
+  "/report/user/chart/year/:date",
+  restaurants.getUserUsingAppTotalByYear
 );
 
 module.exports = router;

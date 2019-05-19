@@ -26,6 +26,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(50),
         allowNull: true
       },
+      res_quota: {
+        type: DataTypes.INTEGER(3),
+        allowNull: true
+      },
       res_open: {
         type: DataTypes.TIME,
         allowNull: true

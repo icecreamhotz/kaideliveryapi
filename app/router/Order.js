@@ -36,6 +36,7 @@ router.post("/delivery", jwtauth, order.updateOrderFromEmployee);
 router.post("/otp", order.sendOtpToSMS);
 router.post("/update/status", jwtauth, order.updateOrderStatus);
 router.post("/update/customprice", order.updateCustomPrice);
+router.post("/update/timeout", jwtauth, order.updateTimeOut);
 router.post("/queue/previous", order.updateQueuePrevious);
 router.post("/queue/next", order.updateNextQueue);
 router.post("/comment/employee", order.updateScoreEmployeeAfterDelivered);

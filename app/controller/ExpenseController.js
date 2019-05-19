@@ -7,10 +7,10 @@ const Expenses = models.Expense;
 const expense = {
   addNewExpenseList: async (req, res) => {
     const data = {
-      exp_name: req.body.extName,
-      exp_details: req.body.expDetails,
-      exp_date: req.body.expDate,
-      exp_price: req.body.expPrice,
+      exp_name: req.body.name,
+      exp_details: req.body.details,
+      exp_date: req.body.date,
+      exp_price: req.body.price,
       emp_id: req.decoded.emp_id
     };
     await Expenses.create(data)
@@ -29,15 +29,15 @@ const expense = {
   },
   editExpenseListById: async (req, res) => {
     const data = {
-      exp_name: req.body.extName,
-      exp_details: req.body.expDetails,
-      exp_date: req.body.expDate,
-      exp_price: req.body.expPrice,
+      exp_name: req.body.name,
+      exp_details: req.body.details,
+      exp_date: req.body.date,
+      exp_price: req.body.price,
       emp_id: req.decoded.emp_id
     };
     await Expenses.update(data, {
       where: {
-        exp_id: req.body.expId,
+        exp_id: req.body.id,
         emp_id: req.decoded.emp_id
       }
     })
@@ -57,7 +57,7 @@ const expense = {
   deleteExpenseListById: async (req, res) => {
     await Expenses.destroy({
       where: {
-        exp_id: req.body.expId,
+        exp_id: req.body.id,
         emp_id: req.decoded.emp_id
       }
     })
@@ -78,7 +78,16 @@ const expense = {
     await Expenses.findAll({
       where: {
         emp_id: req.decoded.emp_id
-      }
+      },
+      attributes: [
+        ["exp_id", "id"],
+        ["exp_name", "name"],
+        ["exp_details", "details"],
+        ["exp_date", "date"],
+        ["exp_price", "price"],
+        "emp_id"
+      ],
+      order: [["exp_date", "ASC"]]
     })
       .then(accounts => {
         res.status(200).json({
@@ -186,6 +195,40 @@ const expense = {
         res.status(200).json({
           message: "Success",
           total: total
+        });
+      })
+      .catch(err => {
+        res.status(500).json({
+          message: err
+        });
+      });
+  },
+  getExpensesByRange: async (req, res) => {
+    const date = req.params.date;
+    const enddate = moment(req.params.enddate).add(1, "day");
+    const parseEndDate = moment(enddate).format("YYYY-MM-DD");
+
+    await Expenses.findAll({
+      where: {
+        emp_id: 17,
+        exp_date: {
+          $gte: date,
+          $lte: parseEndDate
+        }
+      },
+      attributes: [
+        ["exp_id", "id"],
+        ["exp_name", "name"],
+        ["exp_details", "details"],
+        ["exp_date", "date"],
+        ["exp_price", "price"],
+        "emp_id"
+      ]
+    })
+      .then(exp => {
+        res.status(200).json({
+          message: "Success",
+          data: exp
         });
       })
       .catch(err => {

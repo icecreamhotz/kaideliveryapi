@@ -4,9 +4,19 @@ const accounts = require("../controller/AccountController");
 const jwtauth = require("../middleware/jwtauth");
 
 router.get("/", jwtauth, accounts.getAllAccountListById);
-router.get("/report/total/day/:date", accounts.getAccountListByDay);
-router.get("/report/total/month/:date", accounts.getAccountListByMonth);
-router.get("/report/total/year/:date", accounts.getAccountListByYear);
+router.get("/report/total/day/:date", jwtauth, accounts.getAccountListByDay);
+router.get(
+  "/report/total/month/:date",
+  jwtauth,
+  accounts.getAccountListByMonth
+);
+router.get("/report/total/year/:date", jwtauth, accounts.getAccountListByYear);
+router.get(
+  "/report/total/range/:date/:enddate",
+  jwtauth,
+  accounts.getAccountsByRange
+);
+
 router.post("/", jwtauth, accounts.addNewAccountList);
 router.post("/update", jwtauth, accounts.editAccountListById);
 router.post("/delete", jwtauth, accounts.deleteAccountListById);

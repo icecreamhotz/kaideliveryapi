@@ -31,6 +31,7 @@ db.ChangeList = db.sequelize.import("./ChangeLists.js");
 db.ChangeLog = db.sequelize.import("./ChangeLogs.js");
 db.Account = db.sequelize.import("./Accounts.js");
 db.Expense = db.sequelize.import("./Expenses.js");
+db.Income = db.sequelize.import("./Incomes.js");
 
 db.OrderDetail.belongsTo(db.Order, {
   foreignKey: "order_id"
@@ -74,5 +75,17 @@ db.ChangeList.belongsTo(db.Employee, { foreignKey: "emp_id" });
 
 db.Restaurant.hasMany(db.Food, { foreignKey: "res_id" });
 db.Food.belongsTo(db.Restaurant, { foreignKey: "res_id" });
+
+db.Income.belongsTo(db.Order, {
+  foreignKey: "order_id",
+  sourceKey: "order_id"
+});
+db.Order.belongsTo(db.Income, {
+  foreignKey: "order_id",
+  sourceKey: "order_id"
+});
+
+db.Employee.hasMany(db.Income, { foreignKey: "emp_id" });
+db.Income.belongsTo(db.Employee, { foreignKey: "emp_id" });
 
 module.exports = db;

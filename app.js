@@ -62,6 +62,7 @@ app.use("/api/v1/changelists", require("./app/router/ChangeList"));
 app.use("/api/v1/changelogs", require("./app/router/ChangeLog"));
 app.use("/api/v1/accounts", require("./app/router/Account"));
 app.use("/api/v1/expenses", require("./app/router/Expense"));
+app.use("/api/v1/incomes", require("./app/router/Income"));
 
 app.post("/notification", (req, res) => {
   const message = req.body.message;

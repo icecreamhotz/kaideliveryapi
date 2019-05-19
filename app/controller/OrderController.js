@@ -60,13 +60,15 @@ const order = {
         },
         {
           model: models.Restaurant,
-          attributes: ["res_name", "res_lat", "res_lng"]
+          attributes: ["res_name", "res_lat", "res_lng", "res_quota"]
         },
         {
           model: models.OrderDetail,
           attributes: [
             [
-              sequelize.fn("SUM", sequelize.col("orderdetail_price")),
+              sequelize.literal(
+                "(SELECT SUM(orderdetails.orderdetail_price * orderdetails.orderdetail_total) FROM orderdetails WHERE orderdetails.order_id = orders.order_id)"
+              ),
               "totalPrice"
             ]
           ]
@@ -119,13 +121,15 @@ const order = {
         },
         {
           model: models.Restaurant,
-          attributes: ["res_name", "res_lat", "res_lng"]
+          attributes: ["res_name", "res_lat", "res_lng", "res_quota"]
         },
         {
           model: models.OrderDetail,
           attributes: [
             [
-              sequelize.fn("SUM", sequelize.col("orderdetail_price")),
+              sequelize.literal(
+                "(SELECT SUM(orderdetails.orderdetail_price * orderdetails.orderdetail_total) FROM orderdetails WHERE orderdetails.order_id = orders.order_id)"
+              ),
               "totalPrice"
             ]
           ]
@@ -177,13 +181,15 @@ const order = {
         { model: models.User, attributes: ["name", "lastname"] },
         {
           model: models.Restaurant,
-          attributes: ["res_name", "res_lat", "res_lng"]
+          attributes: ["res_name", "res_lat", "res_lng", "res_quota"]
         },
         {
           model: models.OrderDetail,
           attributes: [
             [
-              sequelize.fn("SUM", sequelize.col("orderdetail_price")),
+              sequelize.literal(
+                "(SELECT SUM(orderdetails.orderdetail_price * orderdetails.orderdetail_total) FROM orderdetails WHERE orderdetails.order_id = orders.order_id)"
+              ),
               "totalPrice"
             ]
           ]
@@ -226,7 +232,7 @@ const order = {
         },
         {
           model: models.Restaurant,
-          attributes: ["res_name", "res_logo"]
+          attributes: ["res_name", "res_logo", "res_quota"]
         }
       ]
     })
@@ -412,6 +418,8 @@ const order = {
       include: [
         {
           model: OrderDetails,
+          required: false,
+          separate: true,
           include: [
             {
               model: Foods
@@ -442,7 +450,7 @@ const order = {
         },
         {
           model: models.Restaurant,
-          attributes: ["res_id", "res_name", "res_logo"]
+          attributes: ["res_id", "res_name", "res_logo", "res_quota"]
         }
       ]
     })
@@ -466,7 +474,7 @@ const order = {
       attributes: Object.keys(Orders.attributes).concat([
         [
           sequelize.literal(
-            "(SELECT SUM(orderdetails.orderdetail_price) FROM orderdetails WHERE orderdetails.order_id = orders.order_id)"
+            "(SELECT SUM(orderdetails.orderdetail_price * orderdetails.orderdetail_total) FROM orderdetails WHERE orderdetails.order_id = orders.order_id)"
           ),
           "totalPrice"
         ]
@@ -475,7 +483,7 @@ const order = {
         { model: models.User, attributes: ["name", "lastname"] },
         {
           model: models.Restaurant,
-          attributes: ["res_name", "res_lat", "res_lng"]
+          attributes: ["res_name", "res_lat", "res_lng", "res_quota"]
         },
         {
           model: models.OrderDetail,
@@ -502,24 +510,29 @@ const order = {
   orderHistoryCustomer: async (req, res) => {
     await Orders.findAll({
       where: {
-        user_id: req.decoded.user_id
+        user_id: req.decoded.user_id,
+        $or: [{ order_status: 4 }, { order_status: 5 }]
       },
       attributes: Object.keys(Orders.attributes).concat([
         [
           sequelize.literal(
-            "(SELECT SUM(orderdetails.orderdetail_price) FROM orderdetails WHERE orderdetails.order_id = orders.order_id)"
+            "(SELECT SUM(orderdetails.orderdetail_price  * orderdetails.orderdetail_total) FROM orderdetails WHERE orderdetails.order_id = orders.order_id)"
           ),
           "totalPrice"
         ]
       ]),
       include: [
-        { model: models.Employee, attributes: ["emp_name", "emp_lastname"] },
+        {
+          model: models.Employee,
+          attributes: ["emp_name", "emp_lastname", "emp_avatar"]
+        },
         {
           model: models.Restaurant,
-          attributes: ["res_name", "res_lat", "res_lng"]
+          attributes: ["res_name", "res_lat", "res_lng", "res_quota"]
         },
         {
           model: models.OrderDetail,
+          separate: true,
           include: [
             {
               model: models.Food
@@ -788,6 +801,72 @@ const order = {
               message: "Success",
               status: true
             });
+          })
+          .catch(err => {
+            res.status(500).json({
+              message: err
+            });
+          });
+      })
+      .catch(err => {
+        res.status(500).json({
+          message: err
+        });
+      });
+  },
+  updateTimeOut: async (req, res) => {
+    const timeout = req.body.timeout;
+    const orderId = req.body.order_id;
+    const foodPrice = req.body.foodprice;
+    await Orders.update(
+      {
+        order_timeout: timeout
+      },
+      {
+        where: {
+          order_id: orderId
+        }
+      }
+    )
+      .then(async () => {
+        await Orders.findOne({
+          where: {
+            order_id: orderId
+          }
+        })
+          .then(async order => {
+            await models.Restaurant.findOne({
+              where: {
+                res_id: order.res_id
+              }
+            })
+              .then(async restaurant => {
+                const rate = restaurant.res_quota;
+                const data = {
+                  inc_rate: rate,
+                  inc_total: (foodPrice * rate) / 100,
+                  inc_status: 0,
+                  order_id: orderId,
+                  emp_id: req.decoded.emp_id
+                };
+                await models.Income.create(data)
+                  .then(() => {
+                    res.status(200).json({
+                      message: "Success",
+                      status: true
+                    });
+                  })
+                  .catch(err => {
+                    res.status(500).json({
+                      message: err
+                    });
+                  });
+              })
+              .catch(err => {
+                res.status(500).json({
+                  message: err
+                });
+              });
           })
           .catch(err => {
             res.status(500).json({

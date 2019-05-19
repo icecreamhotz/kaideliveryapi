@@ -7,10 +7,10 @@ const Accounts = models.Account;
 const account = {
   addNewAccountList: async (req, res) => {
     const data = {
-      acc_name: req.body.accName,
-      acc_details: req.body.accDetails,
-      acc_price: req.body.accPrice,
-      acc_date: req.body.accDate,
+      acc_name: req.body.name,
+      acc_details: req.body.details,
+      acc_price: req.body.price,
+      acc_date: req.body.date,
       emp_id: req.decoded.emp_id
     };
     await Accounts.create(data)
@@ -29,15 +29,15 @@ const account = {
   },
   editAccountListById: async (req, res) => {
     const data = {
-      acc_name: req.body.accName,
-      acc_details: req.body.accDetails,
-      acc_price: req.body.accPrice,
-      acc_date: req.body.accDate,
+      acc_name: req.body.name,
+      acc_details: req.body.details,
+      acc_price: req.body.price,
+      acc_date: req.body.date,
       emp_id: req.decoded.emp_id
     };
     await Accounts.update(data, {
       where: {
-        acc_id: req.body.accId,
+        acc_id: req.body.id,
         emp_id: req.decoded.emp_id
       }
     })
@@ -57,7 +57,7 @@ const account = {
   deleteAccountListById: async (req, res) => {
     await Accounts.destroy({
       where: {
-        acc_id: req.body.accId,
+        acc_id: req.body.id,
         emp_id: req.decoded.emp_id
       }
     })
@@ -78,7 +78,16 @@ const account = {
     await Accounts.findAll({
       where: {
         emp_id: req.decoded.emp_id
-      }
+      },
+      attributes: [
+        ["acc_id", "id"],
+        ["acc_name", "name"],
+        ["acc_details", "details"],
+        ["acc_date", "date"],
+        ["acc_price", "price"],
+        "emp_id"
+      ],
+      order: [["acc_date", "ASC"]]
     })
       .then(accounts => {
         res.status(200).json({
@@ -102,7 +111,7 @@ const account = {
       .toDate();
     await Accounts.findOne({
       where: {
-        emp_id: 17,
+        emp_id: req.decoded.emp_id,
         acc_date: {
           $between: [startdate, enddate]
         }
@@ -136,7 +145,7 @@ const account = {
       .toDate();
     await Accounts.findOne({
       where: {
-        emp_id: 17,
+        emp_id: req.decoded.emp_id,
         acc_date: {
           $between: [startdate, enddate]
         }
@@ -176,7 +185,7 @@ const account = {
       .toDate();
     await Accounts.findOne({
       where: {
-        emp_id: 17,
+        emp_id: req.decoded.emp_id,
         acc_date: {
           $between: [startdate, enddate]
         }
@@ -196,6 +205,53 @@ const account = {
       .catch(err => {
         res.status(500).json({
           message: err
+        });
+      });
+  },
+  getAccountsByRange: async (req, res) => {
+    const date = req.params.date;
+    const enddate = moment(req.params.enddate).add(1, "day");
+    const parseEndDate = moment(enddate).format("YYYY-MM-DD");
+
+    await Accounts.findAll({
+      where: {
+        emp_id: req.decoded.emp_id,
+        acc_date: {
+          $gte: date,
+          $lte: parseEndDate
+        }
+      },
+      attributes: [
+        ["acc_id", "id"],
+        ["acc_name", "name"],
+        ["acc_details", "details"],
+        ["acc_date", "date"],
+        ["acc_price", "price"],
+        "emp_id"
+      ]
+    })
+      .then(acc => {
+        res.status(200).json({
+          message: "Success",
+          data: acc
+        });
+      })
+      .catch(err => {
+        res.status(500).json({
+          message: err
+        });
+      });
+  },
+  test: async (req, res) => {
+    await models.sequelize
+      .query(
+        "select * from accounts union select * from expenses order by acc_date ASC LIMIT 1"
+      )
+      .then(function(rows) {
+        console.log(rows.length);
+        res.status(200).json({
+          message: "Success",
+          total: rows
         });
       });
   }

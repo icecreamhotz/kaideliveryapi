@@ -5,6 +5,7 @@ const sharp = require("sharp"),
   fs = require("fs");
 const { promisify } = require("util");
 const path = require("path");
+const moment = require("moment");
 
 const dirName = path.dirname(require.main.filename);
 const pathName = `${dirName}/public/images/restaurants/`;
@@ -142,7 +143,7 @@ const restaurant = {
   },
   getRestaurantDataByName: async (req, res) => {
     await Restaurants.findOne({
-      attributes: ["res_id"],
+      attributes: ["res_id", "res_status", "res_quota"],
       where: {
         res_name: req.body.res_name,
         user_id: req.decoded.user_id
@@ -305,19 +306,24 @@ const restaurant = {
       });
   },
   deleteRestaurantAllData: async (req, res) => {
-    await Restaurants.destroy({
-      where: {
-        res_id: req.body.res_id
-      }
-    })
-      .then(async result => {
-        const image = req.body.res_logo;
-        for (let img of image) {
-          await settingImage(img, false);
+    await Restaurants.update(
+      {
+        res_status: 2
+      },
+      {
+        where: {
+          res_id: req.body.res_id
         }
-
+      }
+    )
+      .then(async result => {
+        // const image = req.body.res_logo;
+        // for (let img of image) {
+        //   await settingImage(img, false);
+        // }
         res.status(200).json({
-          message: "Delete complete."
+          message: "Update complete.",
+          status: true
         });
       })
       .catch(err => {
@@ -405,6 +411,275 @@ const restaurant = {
         res.status(200).json({
           message: "Success",
           data: rest
+        });
+      })
+      .catch(err => {
+        res.status(500).json({
+          message: err
+        });
+      });
+  },
+  updateQuotaRestaurant: async (req, res) => {
+    await Restaurants.update(
+      {
+        res_quota: req.body.quota
+      },
+      {
+        where: {
+          res_id: req.body.res_id
+        }
+      }
+    )
+      .then(() => {
+        res.status(200).json({
+          message: "update success",
+          status: true
+        });
+      })
+      .catch(err => {
+        res.status(500).json({
+          message: err,
+          status: false
+        });
+      });
+  },
+  getQuotaTotalByDay: async (req, res) => {
+    const date = req.params.date;
+    const enddate = moment(date)
+      .add(1, "days")
+      .format("YYYY-MM-DD");
+    await Restaurants.findAll({
+      attributes: [
+        "res_id",
+        "res_name",
+        [
+          sequelize.literal(
+            `(SELECT coalesce(SUM(inc_total),0) FROM incomes WHERE restaurants.res_id = orders.res_id and orders.created_at between '${date}' and '${enddate}')`
+          ),
+          "Share"
+        ]
+      ],
+      include: [
+        {
+          model: models.Order,
+          attributes: [],
+          include: [{ model: models.Income, attributes: [] }]
+        }
+      ],
+      order: [["res_id", "ASC"]],
+      group: "res_id"
+    })
+      .then(share => {
+        res.status(200).json({
+          message: "Success",
+          data: share
+        });
+      })
+      .catch(err => {
+        res.status(500).json({
+          message: err
+        });
+      });
+  },
+  getQuotaTotalByMonth: async (req, res) => {
+    const date = req.params.date;
+    const startdate = moment(date)
+      .set("date", 1)
+      .format("YYYY-MM-DD");
+    const enddate = moment(date)
+      .set("date", 1)
+      .add(1, "M")
+      .format("YYYY-MM-DD");
+    await Restaurants.findAll({
+      attributes: [
+        "res_id",
+        "res_name",
+        [
+          sequelize.literal(
+            `(SELECT coalesce(SUM(inc_total),0) FROM incomes WHERE restaurants.res_id = orders.res_id and orders.created_at between '${startdate}' and '${enddate}')`
+          ),
+          "Share"
+        ]
+      ],
+      include: [
+        {
+          model: models.Order,
+          attributes: [],
+          include: [{ model: models.Income, attributes: [] }]
+        }
+      ],
+      order: [["res_id", "ASC"]],
+      group: "res_id"
+    })
+      .then(share => {
+        res.status(200).json({
+          message: "Success",
+          data: share
+        });
+      })
+      .catch(err => {
+        res.status(500).json({
+          message: err
+        });
+      });
+  },
+  getQuotaTotalByYear: async (req, res) => {
+    const date = req.params.date;
+    const startdate = moment(date)
+      .set("date", 1)
+      .set("months", 0)
+      .format("YYYY-MM-DD");
+    const enddate = moment(date)
+      .set("date", 1)
+      .set("months", 0)
+      .add(1, "year")
+      .format("YYYY-MM-DD");
+    await Restaurants.findAll({
+      attributes: [
+        "res_id",
+        "res_name",
+        [
+          sequelize.literal(
+            `(SELECT coalesce(SUM(inc_total),0) FROM incomes WHERE restaurants.res_id = orders.res_id and orders.created_at between '${startdate}' and '${enddate}')`
+          ),
+          "Share"
+        ]
+      ],
+      include: [
+        {
+          model: models.Order,
+          attributes: [],
+          include: [{ model: models.Income, attributes: [] }]
+        }
+      ],
+      order: [["res_id", "ASC"]],
+      group: "res_id"
+    })
+      .then(share => {
+        res.status(200).json({
+          message: "Success",
+          data: share
+        });
+      })
+      .catch(err => {
+        res.status(500).json({
+          message: err
+        });
+      });
+  },
+  getUserUsingAppTotalByDay: async (req, res) => {
+    const date = req.params.date;
+    const enddate = moment(date)
+      .add(1, "days")
+      .format("YYYY-MM-DD");
+    await Restaurants.findAll({
+      attributes: [
+        "res_id",
+        "res_name",
+        [
+          sequelize.literal(
+            `(SELECT COUNT(order_id) FROM orders WHERE restaurants.res_id = orders.res_id and orders.created_at between '${date}' and '${enddate} and orders.order_status = 4')`
+          ),
+          "Total"
+        ]
+      ],
+      include: [
+        {
+          model: models.Order,
+          attributes: []
+        }
+      ],
+      order: [["res_id", "ASC"]],
+      group: "res_id"
+    })
+      .then(total => {
+        res.status(200).json({
+          message: "Success",
+          data: total
+        });
+      })
+      .catch(err => {
+        res.status(500).json({
+          message: err
+        });
+      });
+  },
+  getUserUsingAppTotalByMonth: async (req, res) => {
+    const date = req.params.date;
+    const startdate = moment(date)
+      .set("date", 1)
+      .format("YYYY-MM-DD");
+    const enddate = moment(date)
+      .set("date", 1)
+      .add(1, "M")
+      .format("YYYY-MM-DD");
+    await Restaurants.findAll({
+      attributes: [
+        "res_id",
+        "res_name",
+        [
+          sequelize.literal(
+            `(SELECT COUNT(order_id) FROM orders WHERE restaurants.res_id = orders.res_id and orders.created_at between '${startdate}' and '${enddate} and orders.order_status = 4')`
+          ),
+          "Total"
+        ]
+      ],
+      include: [
+        {
+          model: models.Order,
+          attributes: []
+        }
+      ],
+      order: [["res_id", "ASC"]],
+      group: "res_id"
+    })
+      .then(total => {
+        res.status(200).json({
+          message: "Success",
+          data: total
+        });
+      })
+      .catch(err => {
+        res.status(500).json({
+          message: err
+        });
+      });
+  },
+  getUserUsingAppTotalByYear: async (req, res) => {
+    const date = req.params.date;
+    const startdate = moment(date)
+      .set("date", 1)
+      .set("months", 0)
+      .format("YYYY-MM-DD");
+    const enddate = moment(date)
+      .set("date", 1)
+      .set("months", 0)
+      .add(1, "year")
+      .format("YYYY-MM-DD");
+    await Restaurants.findAll({
+      attributes: [
+        "res_id",
+        "res_name",
+        [
+          sequelize.literal(
+            `(SELECT COUNT(order_id) FROM orders WHERE restaurants.res_id = orders.res_id and orders.created_at between '${startdate}' and '${enddate} and orders.order_status = 4')`
+          ),
+          "Total"
+        ]
+      ],
+      include: [
+        {
+          model: models.Order,
+          attributes: []
+        }
+      ],
+      order: [["res_id", "ASC"]],
+      group: "res_id"
+    })
+      .then(total => {
+        res.status(200).json({
+          message: "Success",
+          data: total
         });
       })
       .catch(err => {
