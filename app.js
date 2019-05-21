@@ -12,6 +12,7 @@ require("dotenv").config();
 const fcmnotifications = require("./app/controller/FCMNotificationController");
 
 const app = express();
+let PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -72,6 +73,6 @@ app.post("/notification", (req, res) => {
 });
 //
 
-app.listen(3000, () => {
+app.listen(PORT, () => {
   console.log("Listening on port 3000....");
 });
