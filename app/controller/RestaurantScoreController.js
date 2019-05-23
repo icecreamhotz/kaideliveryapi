@@ -19,7 +19,8 @@ const restaurantscores = {
           model: models.Restaurant,
           attributes: ["res_name", "res_logo", "res_id"]
         }
-      ]
+      ],
+      order: [["resscore_id", "DESC"]]
     })
       .then(resscore => {
         res.status(200).json({

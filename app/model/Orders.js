@@ -43,10 +43,6 @@ module.exports = (sequelize, DataTypes) => {
       rate_id: {
         type: DataTypes.INTEGER(6)
       },
-      pro_id: {
-        type: DataTypes.INTEGER(3),
-        allowNull: true
-      },
       endpoint_name: {
         type: DataTypes.STRING(100)
       },
@@ -83,10 +79,6 @@ module.exports = (sequelize, DataTypes) => {
       },
       order_price: {
         type: DataTypes.DECIMAL(8, 2),
-        allowNull: true
-      },
-      order_discount: {
-        type: DataTypes.DECIMAL(7, 2),
         allowNull: true
       },
       order_date: {

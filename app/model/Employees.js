@@ -42,12 +42,6 @@ module.exports = (sequelize, DataTypes) => {
       emptype_id: {
         type: DataTypes.INTEGER(2)
       },
-      resetPasswordToken: {
-        type: DataTypes.STRING(30)
-      },
-      resetPasswordExpired: {
-        type: DataTypes.DATE
-      }
     },
     {
       timestamps: true,

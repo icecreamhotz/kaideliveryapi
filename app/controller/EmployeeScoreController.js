@@ -40,7 +40,8 @@ const employeescores = {
           model: models.Employee,
           attributes: ["emp_name", "emp_lastname", "emp_id", "emp_avatar"]
         }
-      ]
+      ],
+      order: [["empscore_id", "DESC"]]
     })
       .then(empscore => {
         res.status(200).json({

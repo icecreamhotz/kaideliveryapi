@@ -267,7 +267,8 @@ const employees = {
         }
       ).then(result => {
         res.status(200).json({
-          message: "reset password complete"
+          message: "reset password complete",
+          status: true
         });
       });
     });

@@ -48,9 +48,16 @@ const order = {
   getDeliveryEmployeeNow: async (req, res) => {
     await Orders.findAll({
       where: {
-        order_status: {
-          $lte: 3
-        },
+        $or: [
+          {
+            order_status: {
+              $lte: 3
+            }
+          },
+          {
+            order_status: 6
+          }
+        ],
         emp_id: req.decoded.emp_id
       },
       include: [
@@ -106,12 +113,18 @@ const order = {
       });
   },
   getDeliveryUserNow: async (req, res) => {
-    console.log(req.decoded.user_id);
     await Orders.findAll({
       where: {
-        order_status: {
-          $lte: 3
-        },
+        $or: [
+          {
+            order_status: {
+              $lte: 3
+            }
+          },
+          {
+            order_status: 6
+          }
+        ],
         user_id: req.decoded.user_id
       },
       include: [
@@ -152,6 +165,67 @@ const order = {
           ]
         }
       ],
+      limit: 1
+    })
+      .then(order => {
+        res.status(200).json({
+          message: "Success",
+          data: order
+        });
+      })
+      .catch(err => {
+        res.status(500).json({
+          message: err
+        });
+      });
+  },
+  getDeliveryCommonUserNow: async (req, res) => {
+    await Orders.findOne({
+      where: {
+        order_status: {
+          $lte: 4
+        },
+        user_id: req.body.telephone
+      },
+      include: [
+        {
+          model: models.User,
+          attributes: ["user_id", "name", "lastname", "avatar"]
+        },
+        {
+          model: models.Restaurant,
+          attributes: ["res_name", "res_lat", "res_lng", "res_quota"]
+        },
+        {
+          model: models.OrderDetail,
+          attributes: [
+            [
+              sequelize.literal(
+                "(SELECT SUM(orderdetails.orderdetail_price * orderdetails.orderdetail_total) FROM orderdetails WHERE orderdetails.order_id = orders.order_id)"
+              ),
+              "totalPrice"
+            ]
+          ]
+        },
+        {
+          model: models.Employee,
+          attributes: ["emp_id", "emp_name", "emp_lastname", "emp_avatar"],
+          include: [
+            {
+              model: models.EmployeeScore,
+              attributes: [
+                [
+                  sequelize.fn("AVG", sequelize.col("empscore_rating")),
+                  "rating"
+                ]
+              ],
+              group: "emp_id",
+              order: [[sequelize.fn("AVG", sequelize.col("empscore_rating"))]]
+            }
+          ]
+        }
+      ],
+      order: [["order_id", "DESC"]],
       limit: 1
     })
       .then(order => {
@@ -493,7 +567,8 @@ const order = {
             }
           ]
         }
-      ]
+      ],
+      order: [["order_id", "DESC"]]
     })
       .then(order => {
         res.status(200).json({
@@ -539,7 +614,8 @@ const order = {
             }
           ]
         }
-      ]
+      ],
+      order: [["order_id", "DESC"]]
     })
       .then(order => {
         res.status(200).json({
